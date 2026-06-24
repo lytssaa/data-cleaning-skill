@@ -1336,6 +1336,8 @@ class DataPipelineCleaner:
                 # convert to numeric, clip, then convert back to string
                 numeric_vals = pd.to_numeric(df[col], errors="coerce")
                 clipped_numeric = numeric_vals.clip(lo_clip_val, hi_clip_val)
+                # Round to avoid floating point precision issues (e.g. 12.708749999999998)
+                clipped_numeric = clipped_numeric.round(2)
                 df[col] = clipped_numeric.astype(str).replace("nan", "")
             else:
                 df[col] = df[col].clip(lo_clip_val, hi_clip_val)
