@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-MCP Server — wraps DataPipelineCleaner for Claude Desktop.
+MCP Server — wraps DataPipelineCleaner v2 for Claude Desktop / MiMo Code.
 
 Usage:
     pip install mcp pandas pyarrow openpyxl
@@ -29,18 +29,16 @@ from scripts.clean import DataPipelineCleaner  # noqa: E402
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("Data Cleaner — Industrial-Grade Pipeline")
+mcp = FastMCP("Data Cleaner v2 — Industrial-Grade Pipeline")
 
 
-def _safe_parse_json(label: str, raw: str, default: dict | None = None) -> dict | None:
-    raw = raw.strip()
+def _safe_json(label: str, raw: str, default=None):
+    raw = (raw or "").strip()
     if not raw or raw == "{}":
         return default
     try:
         parsed = json.loads(raw)
-        if not isinstance(parsed, dict):
-            return None
-        return parsed
+        return parsed if isinstance(parsed, dict) else default
     except json.JSONDecodeError:
         return None
 
@@ -50,75 +48,77 @@ def clean_data(
     file_path: str,
     schema_rules: str = "{}",
     business_rules: str = "{}",
-    outlier_method: str = "none",
+    semantic_rules: str = "{}",
+    missing_rules: str = "{}",
+    outlier_rules: str = "{}",
+    outlier_method: str = "iqr",
     iqr_k: float = 1.5,
     expand_nested: bool = False,
+    db_table: str = "",
 ) -> str:
-    """Run the five-phase cleaning pipeline with full parameter control.
-
-    Phases: safe ingest -> standardise -> type alignment -> missing trial -> outlier suppression.
+    """Run the v2 data cleaning pipeline with full parameter control.
 
     Args:
-        file_path: Path to the data file (.csv, .tsv, .xlsx, .xls, .json, .parquet, .feather, .html, .xml, .yaml, .db, .pkl).
-        schema_rules: JSON string. Column -> target type mapping.
-            Example: '{"age": "int", "salary": "float"}'
-            Supported types: int, float, str, datetime.
-        business_rules: JSON string. Per-column semantic rules.
-            Example: '{"height_cm": {"replace_values": [0], "fill": "median", "missing_means": "invalid data"}}'
-            Keys: replace_values (list), fill (value or "median"/"mean"/"mode"), missing_means (str).
-        outlier_method: 'iqr', 'percentile', 'zscore', or 'none' (default).
-        iqr_k: IQR sensitivity coefficient (default 1.5).
-        expand_nested: If true, auto-detect and expand nested JSON/list columns.
+        file_path: Path to data file (csv/tsv/xlsx/xls/json/parquet/feather/html/xml/yaml/db/pkl).
+        schema_rules: JSON. Column->type mapping. Example: '{"age": "int", "salary": "float"}'
+        business_rules: JSON. Legacy replace_values. Example: '{"height_cm": {"replace_values": [0], "fill": "median"}}'
+        semantic_rules: JSON. Semantic tagging. Example: '{"age": {"invalid": [-5,-1], "suspicious": [150]}}'
+        missing_rules: JSON. Sentinel->NaN. Example: '{"income": {"sentinel": [-999]}}'
+        outlier_rules: JSON. Per-column outlier method. Example: '{"income": {"method": "percentile"}}'
+        outlier_method: Global outlier method: iqr/percentile/zscore/none (default iqr).
+        iqr_k: IQR sensitivity (default 1.5).
+        expand_nested: Auto-expand nested JSON/list columns.
+        db_table: SQLite table name (for multi-table .db files).
 
     Returns:
-        JSON string — full audit report.
+        JSON string — full audit report with semantic_audit, cell_actions, outlier_winsorizing.
     """
-    parsed_schema = _safe_parse_json("schema_rules", schema_rules, {})
-    if parsed_schema is None:
+    schema = _safe_json("schema_rules", schema_rules, {})
+    business = _safe_json("business_rules", business_rules)
+    semantic = _safe_json("semantic_rules", semantic_rules)
+    missing = _safe_json("missing_rules", missing_rules)
+    outlier_r = _safe_json("outlier_rules", outlier_rules)
+
+    if schema is None:
         return json.dumps({"error": "schema_rules must be a JSON object"}, ensure_ascii=False)
-
-    parsed_business = _safe_parse_json("business_rules", business_rules, {})
-    if parsed_business is None:
-        return json.dumps({"error": "business_rules must be a JSON object"}, ensure_ascii=False)
-
     if outlier_method not in ("iqr", "percentile", "zscore", "none"):
-        return json.dumps(
-            {"error": f"Invalid outlier_method '{outlier_method}'. Use: iqr, percentile, zscore, none"},
-            ensure_ascii=False,
-        )
+        return json.dumps({"error": f"Invalid outlier_method: {outlier_method}"}, ensure_ascii=False)
+
+    engine_kwargs = {"table": db_table} if db_table else None
 
     cleaner = DataPipelineCleaner()
     try:
         _, audit = cleaner.execute(
             file_path=file_path,
-            schema_rules=parsed_schema,
-            business_rules=parsed_business if parsed_business else None,
+            schema_rules=schema,
+            business_rules=business,
+            semantic_rules=semantic,
+            missing_rules=missing,
+            outlier_rules=outlier_r,
             outlier_method=outlier_method,
             iqr_k=iqr_k,
             expand_nested=expand_nested,
+            engine_kwargs=engine_kwargs,
         )
     except FileNotFoundError as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
     except ValueError as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
     except Exception as e:
-        return json.dumps(
-            {"error": f"Pipeline failed: {type(e).__name__}: {e}"},
-            ensure_ascii=False,
-        )
+        return json.dumps({"error": f"Pipeline failed: {type(e).__name__}: {e}"}, ensure_ascii=False)
 
     return json.dumps(audit, ensure_ascii=False, indent=2, default=str)
 
 
 @mcp.tool()
 def profile_data(file_path: str) -> str:
-    """Quick-look data profile: shape, dtypes, null counts, sample values.
+    """Profile a data file: shape, dtypes, nulls, column name mapping, samples.
 
     Args:
-        file_path: Path to a data file.
+        file_path: Path to any supported data file.
 
     Returns:
-        JSON string with column-level statistics.
+        JSON string with per-column statistics and standardized name mapping.
     """
     import pandas as pd
 
@@ -138,11 +138,19 @@ def profile_data(file_path: str) -> str:
             df = pd.read_parquet(p)
         elif suff == ".feather":
             df = pd.read_feather(p)
+        elif suff in {".pkl", ".pickle"}:
+            data = pd.read_pickle(p)
+            if isinstance(data, dict) and "columns" in data and "data" in data:
+                df = pd.DataFrame(data["data"], columns=data["columns"])
+            elif isinstance(data, pd.DataFrame):
+                df = data
+            else:
+                df = pd.DataFrame(data)
         else:
-            return json.dumps({"error": f"Unsupported format for profile: {suff}"}, ensure_ascii=False)
+            return json.dumps({"error": f"Unsupported: {suff}"}, ensure_ascii=False)
 
         total_rows = len(df)
-        profile: dict = {"file": str(p.name), "rows": total_rows, "columns": {}}
+        profile = {"file": str(p.name), "rows": total_rows, "columns": {}}
         for col in df.columns:
             ser = df[col]
             null_count = int(ser.isna().sum())
@@ -157,10 +165,7 @@ def profile_data(file_path: str) -> str:
         return json.dumps(profile, ensure_ascii=False, indent=2, default=str)
 
     except Exception as e:
-        return json.dumps(
-            {"error": f"Profile failed: {type(e).__name__}: {e}"},
-            ensure_ascii=False,
-        )
+        return json.dumps({"error": f"Profile failed: {type(e).__name__}: {e}"}, ensure_ascii=False)
 
 
 if __name__ == "__main__":
