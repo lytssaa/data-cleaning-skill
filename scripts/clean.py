@@ -70,7 +70,8 @@ _GHOST_RE = re.compile(
 
 # ── Column name sanitization ───────────────────────────────────────────────
 _SNAKE_CASE_SEP_RE = re.compile(r"[\s\-]+")
-_NON_ALNUM_RE = re.compile(r"[^\w]+")
+# Keep parentheses, brackets, dots, and % for Chinese / business column names
+_NON_ALNUM_RE = re.compile(r"[^\w()（）\[\]【】.%]+")
 
 
 # ============================================================================
@@ -261,7 +262,34 @@ class DataPipelineCleaner:
                 engine="openpyxl",
             )
 
-        raise ValueError(f"Unsupported file format: '{suffix}'")
+        if suffix == ".parquet":
+            return pd.read_parquet(file_path).astype(str)
+
+        if suffix in {".db", ".sqlite", ".sqlite3"}:
+            import sqlite3
+            con = sqlite3.connect(str(file_path))
+            tables = pd.read_sql_query(
+                "SELECT name FROM sqlite_master WHERE type='table' "
+                "AND name NOT LIKE 'sqlite_%'",
+                con,
+            )
+            table_names = tables["name"].tolist()
+            if not table_names:
+                raise ValueError(f"No user tables found in SQLite: {file_path}")
+            # If only one table, use it; otherwise raise to ask for disambiguation
+            if len(table_names) > 1:
+                raise ValueError(
+                    f"Multiple tables found in {file_path}: {table_names}. "
+                    f"Please specify table name via execute(..., engine_kwargs={{'table': 'your_table'}})."
+                )
+            df = pd.read_sql_query(f"SELECT * FROM [{table_names[0]}]", con)
+            con.close()
+            return df.astype(str)
+
+        raise ValueError(
+            f"Unsupported file format: '{suffix}'. "
+            f"Supported: .csv, .tsv, .xlsx, .xls, .json, .parquet, .db, .sqlite, .sqlite3"
+        )
 
     # ========================================================================
     # Phase 1 — Standardise Columns & Text
