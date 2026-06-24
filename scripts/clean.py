@@ -158,6 +158,7 @@ class DataPipelineCleaner:
         semantic_rules: dict[str, dict[str, Any]] | None = None,
         outlier_rules: dict[str, dict[str, Any]] | None = None,
         missing_rules: dict[str, dict[str, Any]] | None = None,
+        ingestion_config: dict[str, Any] | None = None,
     ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Run the full seven-phase pipeline and return cleaned data + audit.
 
@@ -243,6 +244,16 @@ class DataPipelineCleaner:
                 f"Row count ({len(df)}) below expected minimum "
                 f"({expected_min_rows}) for {fp.name}. Data may be truncated."
             )
+
+        # Unify ingestion_config with legacy params (backward compat)
+        if ingestion_config:
+            if "db" in ingestion_config and engine_kwargs is None:
+                engine_kwargs = ingestion_config["db"]
+            if "expand_nested" in ingestion_config and not expand_nested:
+                expand_nested = ingestion_config["expand_nested"]
+            if "expected_min_rows" in ingestion_config and expected_min_rows is None:
+                expected_min_rows = ingestion_config["expected_min_rows"]
+
         # ── Pre-compute column name mapping for schema_rules ───────────────
         # Phase 1 will rename columns.  We translate schema_rules keys now
         # so Phase 2 receives column names that actually exist.
@@ -333,7 +344,21 @@ class DataPipelineCleaner:
         df = self._missing_value_trial(df, business_rules=business_rules)
         self._audit["stage_timings"]["missing_trial"] = _elapsed(t0)
 
-        # Phase 4: Outlier suppression (now with per-column methods)
+        # Phase 4: Outlier suppression (per-column methods)
+        # Priority validation: skip outlier for columns whose type alignment failed
+        if outlier_rules:
+            failed_cols = []
+            for col in outlier_rules:
+                if col in df.columns and df[col].dtype == "object":
+                    # Type alignment failed or column stayed string — skip outlier
+                    failed_cols.append(col)
+                    self._audit["warnings"].append(
+                        f"outlier_rules['{col}'] skipped: column is still string "
+                        f"(type alignment may have failed)."
+                    )
+            for col in failed_cols:
+                outlier_rules.pop(col, None)
+
         df = self._outlier_suppression(
             df, iqr_k=iqr_k, method=outlier_method,
             threshold=outlier_threshold, zscore_threshold=zscore_threshold,
