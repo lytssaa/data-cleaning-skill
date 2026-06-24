@@ -115,6 +115,8 @@ class DataPipelineCleaner:
         file_path: str | Path,
         schema_rules: dict[str, str],
         engine_kwargs: dict[str, Any] | None = None,
+        iqr_k: float | None = None,
+        lowercase_columns: bool = True,
     ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Run the full five-phase pipeline and return cleaned data + audit.
 
@@ -180,7 +182,7 @@ class DataPipelineCleaner:
         self._audit["stage_timings"]["safe_ingest"] = _elapsed(t0)
 
         # Phase 1: Standardise columns & text
-        df = self._standardize_columns_and_text(df)
+        df = self._standardize_columns_and_text(df, lowercase=lowercase_columns)
         self._audit["stage_timings"]["standardize"] = _elapsed(t0)
 
         # Phase 2: Type alignment
@@ -192,7 +194,7 @@ class DataPipelineCleaner:
         self._audit["stage_timings"]["missing_trial"] = _elapsed(t0)
 
         # Phase 4: Outlier suppression
-        df = self._outlier_suppression(df)
+        df = self._outlier_suppression(df, iqr_k=iqr_k)
         self._audit["stage_timings"]["outlier_suppression"] = _elapsed(t0)
 
         # Phase 5: Final audit assembly
@@ -263,12 +265,24 @@ class DataPipelineCleaner:
             )
 
         if suffix in {".xlsx", ".xls"}:
-            return pd.read_excel(
-                file_path,
-                dtype=str,
-                na_filter=False,
-                engine="openpyxl",
+            sheet = (engine_kwargs or {}).get("sheet")
+            if sheet is not None:
+                return pd.read_excel(
+                    file_path, sheet_name=sheet, dtype=str, na_filter=False,
+                    engine="openpyxl",
+                )
+            # Read all sheets to detect multi-sheet workbooks
+            xls = pd.ExcelFile(file_path, engine="openpyxl")
+            sheet_names = xls.sheet_names
+            if len(sheet_names) == 1:
+                return pd.read_excel(xls, dtype=str, na_filter=False)
+            # Multiple sheets: process first, warn about others
+            self._audit["warnings"].append(
+                f"Excel workbook has {len(sheet_names)} sheets: {sheet_names}. "
+                f"Processing sheet 0 ('{sheet_names[0]}') only. "
+                f"Use engine_kwargs={{'sheet': '<name>'}} to select a specific sheet."
             )
+            return pd.read_excel(xls, sheet_name=sheet_names[0], dtype=str, na_filter=False)
 
         if suffix == ".parquet":
             return pd.read_parquet(file_path).astype(str)
@@ -389,13 +403,15 @@ class DataPipelineCleaner:
     # Phase 1 — Standardise Columns & Text
     # ========================================================================
 
-    def _standardize_columns_and_text(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _standardize_columns_and_text(
+        self, df: pd.DataFrame, lowercase: bool = True
+    ) -> pd.DataFrame:
         """Normalise column names to snake_case; strip ghosts from text cells.
 
         Column operations (order matters):
             1. Strip leading/trailing whitespace from names.
             2. Decompose Unicode (NFKD), then recompose (NFKC).
-            3. Convert to lowercase snake_case.
+            3. Convert to lowercase snake_case (unless *lowercase* is False).
             4. Deduplicate colliding names with a ``_N`` suffix.
 
         Text cell operations:
@@ -420,7 +436,8 @@ class DataPipelineCleaner:
             # Apply NFKC directly to turn fullwidth chars into halfwidth (includes
             # the fullwidth alphabet range U+FF01–U+FF5E and fullwidth space U+3000).
             name = unicodedata.normalize("NFKC", name)
-            name = name.lower()
+            if lowercase:
+                name = name.lower()
             # Replace separators with underscore, collapse
             name = _SNAKE_CASE_SEP_RE.sub("_", name)
             name = _NON_ALNUM_RE.sub("", name)
@@ -631,7 +648,9 @@ class DataPipelineCleaner:
     # Phase 4 — Outlier Suppression
     # ========================================================================
 
-    def _outlier_suppression(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _outlier_suppression(
+        self, df: pd.DataFrame, iqr_k: float | None = None
+    ) -> pd.DataFrame:
         """Winsorize numeric outliers using the IQR fence method.
 
         For every numeric column, values beyond
@@ -640,11 +659,15 @@ class DataPipelineCleaner:
 
         Args:
             df: DataFrame with typed numeric columns.
+            iqr_k: Override IQR multiplier. If None, use class default
+                ``self.IQR_K`` (1.5). For long-tail distributions (e-commerce,
+                finance) pass 3.0 or 5.0.
 
         Returns:
             DataFrame with outliers clamped to IQR fences.
         """
         df = df.copy()
+        k = iqr_k if iqr_k is not None else self.IQR_K
         total_suppressed = 0
         outlier_log: dict[str, dict[str, Any]] = {}
 
@@ -660,8 +683,8 @@ class DataPipelineCleaner:
             if iqr == 0:
                 continue
 
-            lo = q1 - self.IQR_K * iqr
-            hi = q3 + self.IQR_K * iqr
+            lo = q1 - k * iqr
+            hi = q3 + k * iqr
 
             below = int((df[col] < lo).sum())
             above = int((df[col] > hi).sum())
@@ -682,7 +705,7 @@ class DataPipelineCleaner:
             df[col] = df[col].clip(lo_clip, hi_clip)
             outlier_log[col] = {
                 "method": "IQR",
-                "k": self.IQR_K,
+                "k": k,
                 "q1": round(q1, 4),
                 "q3": round(q3, 4),
                 "lower_fence": round(lo, 4),
@@ -699,10 +722,69 @@ class DataPipelineCleaner:
         if total_suppressed:
             self._audit["warnings"].append(
                 f"{total_suppressed} outlier value(s) clamped to IQR fences "
-                f"(k={self.IQR_K})"
+                f"(k={k})"
             )
 
         return df
+
+    # ========================================================================
+    # Utility — Expand Nested Columns
+    # ========================================================================
+
+    @staticmethod
+    def expand_nested(
+        df: pd.DataFrame, column: str, id_column: str | None = None
+    ) -> pd.DataFrame:
+        """Expand a column of nested JSON/Python lists into a flat child table.
+
+        Use this after ``execute()`` when a column (like ``events`` in
+        user_logs.json) contains serialised lists of dicts that you want to
+        analyse row-by-row.
+
+        Args:
+            df: The cleaned DataFrame from ``execute()``.
+            column: Name of the column containing nested data.
+            id_column: Optional column to use as a foreign key linking back
+                to the parent table. If None, uses the DataFrame index.
+
+        Returns:
+            A new DataFrame with one row per nested item. The original
+            ``id_column`` (or ``_parent_idx``) is preserved as a join key.
+
+        Example:
+            >>> df, audit = cleaner.execute("user_logs.json", {...})
+            >>> events_df = cleaner.expand_nested(df, "events", "session_id")
+            >>> events_df.head()
+               session_id event_type       page           timestamp
+            0      S0001     search    /search  2026-06-21T03:51:44
+            1      S0001   add_cart  /checkout  2026-06-21T03:53:24
+        """
+        import ast
+        rows = []
+        key_col = id_column or "_parent_idx"
+        for idx, row in df.iterrows():
+            raw = row[column]
+            if isinstance(raw, float) and pd.isna(raw):
+                continue
+            items = None
+            if isinstance(raw, str):
+                try:
+                    items = json.loads(raw)
+                except (json.JSONDecodeError, ValueError):
+                    try:
+                        items = ast.literal_eval(raw)
+                    except (ValueError, SyntaxError):
+                        continue
+            elif isinstance(raw, list):
+                items = raw
+            if not isinstance(items, list):
+                continue
+            parent_id = row[id_column] if id_column else idx
+            for item in items:
+                if isinstance(item, dict):
+                    r = {key_col: parent_id, **item}
+                    rows.append(r)
+        return pd.DataFrame(rows)
 
 
 # ============================================================================
