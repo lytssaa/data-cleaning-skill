@@ -98,21 +98,22 @@
 ## 管道架构
 
 ```mermaid
+%%{init: {'theme': 'base', 'flowchart': {'nodeSpacing': 60, 'rankSpacing': 80}}}%%
 flowchart LR
-    A["📄 原始文件"] --> B["🔒 安全吞入<br/>dtype=str"]
-    B --> C["🧹 规范化<br/>snake_case"]
-    C --> D["🔧 类型对齐<br/>errors=coerce"]
-    D --> E["⚖️ 缺失审判<br/>中位数/Unknown"]
-    E --> F["✂️ 异常压制<br/>IQR 截断"]
-    F --> G["✅ 干净数据<br/>📊 审计报告"]
+    A["📄 原始文件<br/><br/>CSV · Excel<br/>JSON · TSV"] --> B["🔒 第0阶段<br/><br/>安全吞入<br/>dtype=str<br/>零类型推断"]
+    B --> C["🧹 第1阶段<br/><br/>结构规范化<br/>snake_case<br/>幽灵字符剔除"]
+    C --> D["🔧 第2阶段<br/><br/>类型对齐<br/>errors=coerce<br/>脏值→NaN"]
+    D --> E["⚖️ 第3阶段<br/><br/>缺失审判<br/>列>70%斩<br/>行>50%斩"]
+    E --> F["✂️ 第4阶段<br/><br/>异常压制<br/>IQR 截断<br/>绝不删行"]
+    F --> G["✅ 输出<br/><br/>干净数据<br/>+ 审计报告"]
 
-    style A fill:#f5f5f5,stroke:#999
-    style B fill:#e3f2fd,stroke:#1976d2
-    style C fill:#e8f5e9,stroke:#388e3c
-    style D fill:#fff3e0,stroke:#f57c00
-    style E fill:#fce4ec,stroke:#c2185b
-    style F fill:#f3e5f5,stroke:#7b1fa2
-    style G fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    style A fill:#f5f5f5,stroke:#999,stroke-width:2px
+    style B fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style C fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style E fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style F fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style G fill:#e8eaf6,stroke:#3f51b5,stroke-width:3px
 ```
 
 **五阶段详解：**
