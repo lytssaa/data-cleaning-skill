@@ -27,6 +27,18 @@ from pathlib import Path
 
 import pandas as pd
 
+# Reuse the same column-name normalisation logic from clean.py
+_SNAKE_SEP_RE = re.compile(r"[\s\-]+")
+_NON_ALNUM_RE = re.compile(r"[^\w()（）\[\]【】.%]+")
+import unicodedata
+
+def _standardize_col_name(name: str) -> str:
+    name = unicodedata.normalize("NFKC", str(name)).strip()
+    name = _SNAKE_SEP_RE.sub("_", name)
+    name = _NON_ALNUM_RE.sub("", name)
+    name = re.sub(r"_+", "_", name)
+    return name.lower().strip("_") or "col"
+
 
 def _read(path: Path) -> pd.DataFrame:
     suf = path.suffix.lower()
@@ -125,16 +137,25 @@ def _read(path: Path) -> pd.DataFrame:
 
 
 def profile(df: pd.DataFrame, top: int = 5) -> dict:
+    # Pre-compute column name mapping so AI sees standardised names
+    col_mapping = {}
+    for col in df.columns:
+        std = _standardize_col_name(col)
+        if std != str(col):
+            col_mapping[str(col)] = std
+
     out: dict = {
         "shape": {"rows": int(len(df)), "cols": int(df.shape[1])},
         "duplicate_rows": int(df.duplicated().sum()),
         "columns": [],
     }
+    if col_mapping:
+        out["column_name_mapping"] = col_mapping
+
     for col in df.columns:
         s = df[col]
         n_null = int(s.isna().sum())
         n_unique = int(s.nunique(dropna=True))
-        # sample up to `top` non-null values
         sample = (
             s.dropna().astype(str).head(top).tolist()
             if n_unique > 0
@@ -142,6 +163,7 @@ def profile(df: pd.DataFrame, top: int = 5) -> dict:
         )
         col_info: dict = {
             "name": str(col),
+            "standardized_name": _standardize_col_name(col),
             "dtype": str(s.dtype),
             "null_count": n_null,
             "null_pct": round(n_null / max(len(df), 1) * 100, 2),
@@ -224,6 +246,10 @@ def main() -> int:
         print(f"File: {args.input}")
         print(f"Shape: {p['shape']['rows']} rows x {p['shape']['cols']} cols")
         print(f"Duplicate rows: {p['duplicate_rows']}")
+        if p.get("column_name_mapping"):
+            print(f"\nColumn name mapping (original -> standardised):")
+            for orig, std in p["column_name_mapping"].items():
+                print(f"  {orig} -> {std}")
         for w in p.get("warnings", []):
             print(f"WARNING [{w['type']}]: {w['message']}")
             for s in w.get("samples", []):
@@ -231,7 +257,8 @@ def main() -> int:
         print("-" * 60)
         for c in p["columns"]:
             line = (
-                f"[{c['name']}] dtype={c['dtype']} "
+                f"[{c['standardized_name']}] (original: {c['name']}) "
+                f"dtype={c['dtype']} "
                 f"null={c['null_count']} ({c['null_pct']}%) "
                 f"unique={c['unique_count']} "
                 f"sample={c['sample'][:3]}"
