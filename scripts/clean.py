@@ -1587,7 +1587,7 @@ class DataPipelineCleaner:
         # dtype=str ingestion turns blanks into literal "nan"/"NaN"/"None"/"null"
         # which defeat .isna() downstream.  Replace ALL of them with real NaN.
         _GHOST_NA_RE = re.compile(
-            r"^\s*(nan|none|null|n/a|na|n/a|-|\.+)\s*$", re.IGNORECASE
+            r"^\s*(nan|none|null|n/a|na|-|\.+)\s*$", re.IGNORECASE
         )
         text_cols = df.select_dtypes(include=["object", "string"]).columns
         ghost_fixed = 0
@@ -1704,7 +1704,8 @@ class DataPipelineCleaner:
 
             if pd.api.types.is_numeric_dtype(df[col]):
                 # Use median — robust to outliers that will be capped later
-                median_val = df[col].median()
+                numeric_vals = pd.to_numeric(df[col], errors="coerce")
+                median_val = numeric_vals.median()
                 if pd.isna(median_val):
                     median_val = 0
                 # Integer columns (including nullable Int64) need an integer
@@ -1726,12 +1727,23 @@ class DataPipelineCleaner:
                 }
                 null_count -= int(df[col].isna().sum())
             else:
-                df[col] = df[col].fillna(self.UNKNOWN_TEXT)
-                imputation_log[col] = {
-                    "strategy": "constant",
-                    "fill_value": self.UNKNOWN_TEXT,
-                    "count": null_count,
-                }
+                # Categorical: try mode first, fall back to UNKNOWN_TEXT
+                mode_vals = df[col].mode()
+                if len(mode_vals) > 0:
+                    fill_cat = mode_vals.iloc[0]
+                    df[col] = df[col].fillna(fill_cat)
+                    imputation_log[col] = {
+                        "strategy": "mode",
+                        "fill_value": str(fill_cat),
+                        "count": null_count,
+                    }
+                else:
+                    df[col] = df[col].fillna(self.UNKNOWN_TEXT)
+                    imputation_log[col] = {
+                        "strategy": "constant",
+                        "fill_value": self.UNKNOWN_TEXT,
+                        "count": null_count,
+                    }
 
             missing_fixed += null_count
 
