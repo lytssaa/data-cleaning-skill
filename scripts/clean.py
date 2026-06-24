@@ -742,89 +742,60 @@ class DataPipelineCleaner:
 
         return summary
 
-    def _save_cleaned_output(
-        self,
-        subdir: Path,
-        source_stem: str,
+    # ========================================================================
+    # Artifact Builder (pure data, no I/O)
+    # ========================================================================
+
+    @staticmethod
+    def build_artifacts(
         df: pd.DataFrame,
         audit: dict[str, Any],
-        output_encoding: str = "utf-8-sig",
-    ) -> list[str]:
-        """Save the main DataFrame and audit JSON into *subdir*.
+        source_stem: str = "data",
+    ) -> dict[str, Any]:
+        """Build a data product bundle in memory — no file I/O.
 
-        Returns a list of saved artifact filenames (relative to *subdir*).
+        Returns a dict (ArtifactBundle) with all JSON-serializable structures
+        and the cleaned DataFrame. Call save_artifacts() to persist.
+
+        Returns:
+            {
+                "data": cleaned DataFrame,
+                "report": {"audit": dict, "data_quality": dict},
+                "lineage": {"pipeline_version": "v2", "steps": [...]},
+                "metadata": {...},
+                "samples": {"before": DataFrame|None, "after": DataFrame},
+            }
         """
-        artifacts: list[str] = []
-
-        # ═══════════════════════════════════════════════════════════════
-        # Data Product Package Output
-        # ═══════════════════════════════════════════════════════════════
-
-        # 1. data/ — cleaned data (CSV + Parquet)
-        data_dir = subdir / "data"
-        data_dir.mkdir(exist_ok=True)
-
-        csv_path = data_dir / f"{source_stem}.csv"
-        df.to_csv(csv_path, index=False, encoding=output_encoding)
-        artifacts.append(f"data/{csv_path.name}")
-
-        try:
-            parquet_path = data_dir / f"{source_stem}.parquet"
-            df.to_parquet(parquet_path, index=False)
-            artifacts.append(f"data/{parquet_path.name}")
-        except Exception:
-            pass  # parquet optional
-
-        # 2. report/ — audit + data quality
-        report_dir = subdir / "report"
-        report_dir.mkdir(exist_ok=True)
-
-        audit_path = report_dir / "audit.json"
-        with open(audit_path, "w", encoding="utf-8") as f:
-            json.dump(audit, f, ensure_ascii=False, indent=2, default=str)
-        artifacts.append(f"report/audit.json")
-
         semantic = audit.get("semantic_output", {})
-        if semantic:
-            dq_path = report_dir / "data_quality.json"
-            with open(dq_path, "w", encoding="utf-8") as f:
-                json.dump({
-                    "score": semantic.get("data_quality_score", 0),
-                    "dimensions": semantic.get("data_quality_dimensions", {}),
-                    "summary": semantic.get("summary", ""),
-                    "insights": semantic.get("insights", []),
-                    "recommendations": semantic.get("recommendations", []),
-                }, f, ensure_ascii=False, indent=2, default=str)
-            artifacts.append(f"report/data_quality.json")
-
-        # 3. lineage/ — transformation steps
-        lineage_dir = subdir / "lineage"
-        lineage_dir.mkdir(exist_ok=True)
-
-        lineage = {
-            "pipeline_version": "v2",
-            "steps": [],
-        }
-        if audit.get("per_column", {}).get("schema_rules_applied"):
-            lineage["steps"].append({"phase": "type_alignment", "rules": audit["per_column"]["schema_rules_applied"]})
-        if audit.get("semantic_audit", {}).get("total_cells_tagged", 0) > 0:
-            lineage["steps"].append({"phase": "semantic_tagging", "audit": audit["semantic_audit"]})
-        if audit.get("cell_actions"):
-            lineage["steps"].append({"phase": "decision_engine", "actions_count": len(audit["cell_actions"])})
-        if audit.get("missing_rules_audit", {}).get("total_sentinels_converted", 0) > 0:
-            lineage["steps"].append({"phase": "missing_rules", "audit": audit["missing_rules_audit"]})
-        if audit.get("per_column", {}).get("imputation"):
-            lineage["steps"].append({"phase": "imputation", "details": audit["per_column"]["imputation"]})
-        if audit.get("per_column", {}).get("outlier_winsorizing"):
-            lineage["steps"].append({"phase": "outlier_suppression", "details": audit["per_column"]["outlier_winsorizing"]})
-
-        lineage_path = lineage_dir / "transformations.json"
-        with open(lineage_path, "w", encoding="utf-8") as f:
-            json.dump(lineage, f, ensure_ascii=False, indent=2, default=str)
-        artifacts.append(f"lineage/transformations.json")
-
-        # 4. metadata.json — control layer
         input_info = audit.get("input", {})
+
+        # --- report ---
+        data_quality = {}
+        if semantic:
+            data_quality = {
+                "score": semantic.get("data_quality_score", 0),
+                "dimensions": semantic.get("data_quality_dimensions", {}),
+                "summary": semantic.get("summary", ""),
+                "insights": semantic.get("insights", []),
+                "recommendations": semantic.get("recommendations", []),
+            }
+
+        # --- lineage ---
+        lineage_steps = []
+        if audit.get("per_column", {}).get("schema_rules_applied"):
+            lineage_steps.append({"phase": "type_alignment", "rules": audit["per_column"]["schema_rules_applied"]})
+        if audit.get("semantic_audit", {}).get("total_cells_tagged", 0) > 0:
+            lineage_steps.append({"phase": "semantic_tagging", "audit": audit["semantic_audit"]})
+        if audit.get("cell_actions"):
+            lineage_steps.append({"phase": "decision_engine", "actions_count": len(audit["cell_actions"])})
+        if audit.get("missing_rules_audit", {}).get("total_sentinels_converted", 0) > 0:
+            lineage_steps.append({"phase": "missing_rules", "audit": audit["missing_rules_audit"]})
+        if audit.get("per_column", {}).get("imputation"):
+            lineage_steps.append({"phase": "imputation", "details": audit["per_column"]["imputation"]})
+        if audit.get("per_column", {}).get("outlier_winsorizing"):
+            lineage_steps.append({"phase": "outlier_suppression", "details": audit["per_column"]["outlier_winsorizing"]})
+
+        # --- metadata ---
         metadata = {
             "source_file": input_info.get("file", source_stem),
             "source_format": input_info.get("format", ""),
@@ -837,30 +808,111 @@ class DataPipelineCleaner:
             "pipeline_version": "v2",
             "timestamp": datetime.now().isoformat(timespec="seconds"),
         }
-        meta_path = subdir / "metadata.json"
-        with open(meta_path, "w", encoding="utf-8") as f:
-            json.dump(metadata, f, ensure_ascii=False, indent=2, default=str)
-        artifacts.append("metadata.json")
 
-        # 5. samples/ — before vs after (first 5 rows)
-        samples_dir = subdir / "samples"
-        samples_dir.mkdir(exist_ok=True)
-
-        # Read original for before sample
-        try:
-            original_path = input_info.get("path", "")
-            if original_path and Path(original_path).exists():
+        # --- samples ---
+        df_before = None
+        original_path = input_info.get("path", "")
+        if original_path and Path(original_path).exists():
+            try:
                 from profile import _read as _profile_read
-                df_before = _profile_read(Path(original_path))
-                before_sample = samples_dir / "before_sample.csv"
-                df_before.head(5).to_csv(before_sample, index=False, encoding=output_encoding)
-                artifacts.append(f"samples/before_sample.csv")
+                df_before = _profile_read(Path(original_path)).head(5)
+            except Exception:
+                pass
+
+        return {
+            "data": df,
+            "report": {"audit": audit, "data_quality": data_quality},
+            "lineage": {"pipeline_version": "v2", "steps": lineage_steps},
+            "metadata": metadata,
+            "samples": {"before": df_before, "after": df.head(5)},
+        }
+
+    # ========================================================================
+    # Artifact Saver (writes to disk)
+    # ========================================================================
+
+    @staticmethod
+    def save_artifacts(
+        bundle: dict[str, Any],
+        output_dir: str | Path,
+        source_stem: str = "data",
+        output_encoding: str = "utf-8-sig",
+    ) -> list[str]:
+        """Write an ArtifactBundle to disk. Returns list of saved file paths.
+
+        Args:
+            bundle: Output of build_artifacts().
+            output_dir: Target directory.
+            source_stem: Base name for files.
+            output_encoding: CSV encoding.
+        """
+        subdir = Path(output_dir) / source_stem
+        subdir.mkdir(parents=True, exist_ok=True)
+        artifacts: list[str] = []
+
+        df = bundle["data"]
+        report = bundle["report"]
+        lineage = bundle["lineage"]
+        metadata = bundle["metadata"]
+        samples = bundle["samples"]
+
+        # 1. data/
+        data_dir = subdir / "data"
+        data_dir.mkdir(exist_ok=True)
+        csv_path = data_dir / f"{source_stem}.csv"
+        df.to_csv(csv_path, index=False, encoding=output_encoding)
+        artifacts.append(f"data/{csv_path.name}")
+        try:
+            parquet_path = data_dir / f"{source_stem}.parquet"
+            df.to_parquet(parquet_path, index=False)
+            artifacts.append(f"data/{parquet_path.name}")
         except Exception:
             pass
 
-        after_sample = samples_dir / "after_sample.csv"
-        df.head(5).to_csv(after_sample, index=False, encoding=output_encoding)
-        artifacts.append(f"samples/after_sample.csv")
+        # 2. report/
+        report_dir = subdir / "report"
+        report_dir.mkdir(exist_ok=True)
+        with open(report_dir / "audit.json", "w", encoding="utf-8") as f:
+            json.dump(report["audit"], f, ensure_ascii=False, indent=2, default=str)
+        artifacts.append("report/audit.json")
+        if report.get("data_quality"):
+            with open(report_dir / "data_quality.json", "w", encoding="utf-8") as f:
+                json.dump(report["data_quality"], f, ensure_ascii=False, indent=2, default=str)
+            artifacts.append("report/data_quality.json")
+
+        # 3. lineage/
+        lineage_dir = subdir / "lineage"
+        lineage_dir.mkdir(exist_ok=True)
+        with open(lineage_dir / "transformations.json", "w", encoding="utf-8") as f:
+            json.dump(lineage, f, ensure_ascii=False, indent=2, default=str)
+        artifacts.append("lineage/transformations.json")
+
+        # 4. metadata.json
+        with open(subdir / "metadata.json", "w", encoding="utf-8") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=2, default=str)
+        artifacts.append("metadata.json")
+
+        # 5. samples/
+        samples_dir = subdir / "samples"
+        samples_dir.mkdir(exist_ok=True)
+        if samples.get("before") is not None:
+            samples["before"].to_csv(samples_dir / "before_sample.csv", index=False, encoding=output_encoding)
+            artifacts.append("samples/before_sample.csv")
+        samples["after"].to_csv(samples_dir / "after_sample.csv", index=False, encoding=output_encoding)
+        artifacts.append("samples/after_sample.csv")
+
+        return artifacts
+
+    # ========================================================================
+    # Legacy wrapper (backward compat)
+    # ========================================================================
+
+    def _save_cleaned_output(
+        self, subdir, source_stem, df, audit, output_encoding="utf-8-sig",
+    ) -> list[str]:
+        """Backward-compatible wrapper around build_artifacts + save_artifacts."""
+        bundle = self.build_artifacts(df, audit, source_stem)
+        return self.save_artifacts(bundle, subdir.parent, source_stem, output_encoding)
 
         # SQLite schema (if the source was a database)
         input_fmt = input_info.get("format", "")
