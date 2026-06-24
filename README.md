@@ -51,33 +51,27 @@
 
 ### 场景一：用户调研数据清洗
 
-> 从问卷平台导出 2 万行 CSV，列名是中文、有全角空格、年龄填了"二十岁"、"35+"、"中年"……
+从问卷平台导出 2 万行 CSV，列名是中文、有全角空格、年龄填了"二十岁"、"35+"、"中年"……
 
-**用本工具：** `schema_rules={"年龄": "int", "收入": "float"}`，一行代码拿到干净数据 + 审计报告。全角空格自动去、中文数字自动转 NaN 再中位数填充、异常值截断不丢行。
+**用本工具：** `schema_rules={"年龄": "int", "收入": "float"}`，一行代码拿到干净数据 + 审计报告。
 
 ### 场景二：多源数据合并前的标准化
 
-> 三个部门交上来的 Excel 格式各不相同：有的用 `User Name`，有的用 `user_name`，有的用 `用户名`……
+三个部门交上来的 Excel 格式各不相同：有的用 `User Name`，有的用 `user_name`，有的用 `用户名`……
 
-**用本工具：** 列名自动统一为 snake_case，NFKC 全角转半角，幽灵字符剔除，合并前每个人都跑一遍。
+**用本工具：** 列名自动统一为 snake_case，NFKC 全角转半角，幽灵字符剔除。
 
 ### 场景三：生产 ETL 管道中的质量守门员
 
-> 每天凌晨自动入库的 CSV 数据，上游可能丢字段、可能混入脏值……
+每天凌晨自动入库的 CSV 数据，上游可能丢字段、可能混入脏值……
 
 **用本工具：** `execute()` 返回的 `audit` dict 直接 JSON 序列化送到监控系统。留存率低于阈值自动告警。
 
 ### 场景四：AI 辅助数据分析
 
-> 跟 WorkBuddy 对话："帮我把本周的销售数据洗一下，金额转 float，日期转 datetime"
+跟 WorkBuddy 对话："帮我把本周的销售数据洗一下，金额转 float，日期转 datetime"
 
-**用本工具：** AI 自动加载此 Skill，识别文件类型、执行五阶段管道、输出干净数据。不必离开对话界面。
-
-### 场景五：教学与面试
-
-> 教学生/新人理解数据清洗的标准流程
-
-**用本工具：** 五阶段管道可拆分调用，每一步独立可观测。审计报告本身就是教学输出。
+**用本工具：** AI 自动加载此 Skill，识别文件类型、执行五阶段管道、输出干净数据。
 
 ---
 
@@ -85,83 +79,51 @@
 
 **永不静默丢弃数据。永不信任自动类型推断。永不删除异常行。全程可审计。**
 
-❌ 这不是一个 `df.dropna()` 脚本。
+❌ 这不是一个 `df.dropna()` 脚本。  
 ✅ 每一步操作都有记录，每一次删除都有日志，每一个异常值都被截断到边界值——而不是被删除。
 
-区别：
+区别对比：
 
-| 做法 | 玩具脚本（什么不该做） | 本 Skill（怎么做） |
-| ---- | -------------------- | ----------------- |
-| 读取 CSV | `pd.read_csv()` 自动推断类型 | `dtype=str` 全文本吞入，零推断 |
-| 工号 "001" | 变成 1，前导零丢失 | 保持 "001"，除非你指定它为 int |
-| 年龄 "二十岁" | 直接报错崩溃 | 静默转 NaN，中位数填充 |
-| 长数字 ID | 变科学计数法 1.23e+15 | 字符串不变 |
-| 某列 90% 空 | 没处理 | 整列砍掉 + 审计记录 |
-| 异常值 200000 | 静默删除整行 | 截断到 IQR 上界，数据量一条不少 |
+| 做法 | 普通脚本（什么不该做） | 本 Skill（怎么做） |
+| ---- | :--------------------: | :----------------: |
+| 读取 CSV | `pd.read_csv()` 自动推断 | `dtype=str` 全文本，零推断 |
+| 工号 "001" | 变成 1，前导零丢失 | 保持 "001" |
+| 年龄 "二十岁" | 直接报错崩溃 | 转 NaN，中位数填充 |
+| 长数字 ID | 变科学计数法 | 字符串不变 |
+| 某列 90% 空 | 留着污染分析 | 整列砍掉 + 审计记录 |
+| 异常值 200000 | 静默删行 | 截断到 IQR 上界 |
 
 ---
 
 ## 管道架构
 
+```mermaid
+flowchart TD
+    A["📄 原始文件<br/>CSV / Excel / JSON / TSV"] --> B["🔒 阶段 0 — 安全吞入<br/>dtype=str · 零类型推断<br/>多编码回退链"]
+    B --> C["🧹 阶段 1 — 结构规范化<br/>snake_case 列名<br/>NFKC 全角转半角<br/>幽灵字符剔除"]
+    C --> D["🔧 阶段 2 — 类型对齐<br/>schema_rules 强转<br/>errors='coerce'<br/>脏值→NaN"]
+    D --> E["⚖️ 阶段 3 — 缺失审判<br/>列>70%删除 · 行>50%删除<br/>数值→中位数 · 文本→Unknown"]
+    E --> F["✂️ 阶段 4 — 异常压制<br/>IQR 1.5× 截断<br/>绝不删行"]
+    F --> G["✅ cleaned_df<br/>📊 audit_report"]
+
+    style A fill:#f5f5f5,stroke:#999
+    style B fill:#e3f2fd,stroke:#1976d2
+    style C fill:#e8f5e9,stroke:#388e3c
+    style D fill:#fff3e0,stroke:#f57c00
+    style E fill:#fce4ec,stroke:#c2185b
+    style F fill:#f3e5f5,stroke:#7b1fa2
+    style G fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
 ```
-                    ┌───────────────────┐
-                    │  原始文件 (.csv /  │
-                    │  .xlsx / .json /  │
-                    │  .tsv)            │
-                    └─────────┬─────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────┐
-│  阶段 0 — _safe_ingest()             安全吞入            │
-│  · dtype=str，零类型推断                                  │
-│  · 多编码自动回退链 (utf-8 → gbk → gb18030 → latin-1)   │
-│  · 支持 CSV / TSV / Excel (.xlsx/.xls) / JSON           │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│  阶段 1 — _standardize_columns_and_text()  结构规范化    │
-│  · 列名：去空格 → NFKC 全角转半角 → snake_case           │
-│  · 列名碰撞自动去重 (加 _2、_3 后缀)                     │
-│  · 文本值：NFKC 半角化 → 幽灵字符正则剔除                │
-│  · 剔除 \u200b \ufeff \u200c \u200d \u200e 等不可见字符 │
-│  · 空串 → NaN（语义提升）                                 │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│  阶段 2 — _type_alignment(df, schema_rules)  类型对齐   │
-│  · 按用户指定的 schema_rules 强转                        │
-│  · errors='coerce'：脏值静默转 NaN                      │
-│  · 支持 int / float / str / datetime 四种目标类型        │
-│  · 未在 schema_rules 中的列保持 string                   │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│  阶段 3 — _missing_value_trial(df)  缺失审判             │
-│  · 列缺失率 > 70%  →  整列删除                           │
-│  · 行缺失率 > 50%  →  整行删除                           │
-│  · 数值型列  →  中位数填充                               │
-│  · 文本/类别型列  →  "Unknown" 填充                      │
-│  · 日期型列  →  前向填充                                 │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│  阶段 4 — _outlier_suppression(df)  异常压制             │
-│  · IQR (四分位距) 方法，k=1.5                            │
-│  · 异常值截断到 [Q1−1.5×IQR, Q3+1.5×IQR] 边界           │
-│  · 铁律：绝不删除行，只截断值                             │
-│  · 整数列自动取整边界                                     │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ▼
-                ┌─────────────────┐
-                │  (cleaned_df,   │
-                │   audit_report) │
-                └─────────────────┘
-```
+
+**五阶段详解：**
+
+| 阶段 | 方法 | 核心行为 | 安全保证 |
+|:----:| ---- | -------- | -------- |
+| 0 | `_safe_ingest()` | 全字符串读入，零类型推断 | 工号"001"不变1，长数字不变科学计数法 |
+| 1 | `_standardize()` | 列名→snake_case，NFKC半角化，`​‌‍﻿`剔除 | 全角空格、零宽字符自动清理 |
+| 2 | `_type_alignment()` | `errors='coerce'`强转 | "二十岁"转NaN，不报错，由阶段3填充 |
+| 3 | `_missing_trial()` | 列>70%删，行>50%删；数值中位数，文本Unknown | 整行删除有日志，填充策略可审计 |
+| 4 | `_outlier_suppression()` | IQR 1.5× Winsorizing | 异常值截断到边界，数据量一条不少 |
 
 ---
 
@@ -169,32 +131,23 @@
 
 ### WorkBuddy
 
-**安装：**
-
 ```bash
 workbuddy skill install https://github.com/lytssaa/data-cleaning-skill
 ```
 
-或在 WorkBuddy 对话中：
-
+或在对话中：
 ```
 帮我安装 data-cleaning skill，仓库地址 https://github.com/lytssaa/data-cleaning-skill
 ```
 
 **使用：**
-
 ```
-帮我把 sales_2024.csv 洗一下：
-- age 转 int
-- salary 转 float
-- join_date 转 datetime
+帮我把 sales_2024.csv 洗一下，age 转 int，salary 转 float
 ```
 
 ---
 
 ### Claude Desktop
-
-**安装：**
 
 ```bash
 # 1. 安装依赖
@@ -206,7 +159,7 @@ git clone https://github.com/lytssaa/data-cleaning-skill.git ~/data-cleaning-ski
 
 **3. 配置 Claude Desktop：**
 
-打开 `claude_desktop_config.json`（位置：macOS `~/Library/Application Support/Claude/`，Windows `%APPDATA%\Claude\`），添加：
+编辑 `claude_desktop_config.json`：
 
 ```json
 {
@@ -223,32 +176,22 @@ git clone https://github.com/lytssaa/data-cleaning-skill.git ~/data-cleaning-ski
 **4. 重启 Claude Desktop**
 
 **使用：**
-
 ```
-用 data-cleaning 工具帮我把 sales.csv 清洗，age 转 int，amount 转 float
+用 data-cleaning 工具清洗 sales.csv，age 转 int，amount 转 float
 ```
 
 ---
 
 ### AtomCode
 
-**安装：**
-
 ```bash
 git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.atomcode/skills/data-cleaning
 ```
 
 **使用：**
-
-斜杠命令：
-
 ```
 /data-cleaning
-```
-
-或自然语言：
-
-```
+# 或
 清洗 dirty_data.csv，把 age 转 int，price 转 float
 ```
 
@@ -256,26 +199,18 @@ git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.atomcode/skills/
 
 ### MiMo Code
 
-**安装：**
-
 ```bash
 git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.config/mimocode/skills/data-cleaning
 ```
 
-或在 `mimocode.json` 中配置 url 自动加载：
-
+或在 `mimocode.json` 中：
 ```json
-{
-  "skills": {
-    "urls": ["https://github.com/lytssaa/data-cleaning-skill/releases/latest/download/bundle.json"]
-  }
-}
+{ "skills": { "urls": ["https://github.com/lytssaa/data-cleaning-skill/releases/latest/download/bundle.json"] } }
 ```
 
 **使用：**
-
 ```
-清洗 survey_results.xlsx，把 respondent_age 转 int，income 转 float
+清洗 survey_results.xlsx，respondent_age 转 int，income 转 float
 ```
 
 ---
@@ -294,30 +229,6 @@ cleaned_df, audit = cleaner.execute(
 print(f"留存率: {audit['retention_rate_pct']}%")
 print(f"修复缺失值: {audit['missing_values_fixed']} 处")
 print(f"压制异常值: {audit['outliers_suppressed']} 处")
-
-# 保存清洗结果
-cleaned_df.to_csv("cleaned_survey.csv", index=False)
-
-# 保存审计报告
-import json
-with open("audit.json", "w") as f:
-    json.dump(audit, f, ensure_ascii=False, indent=2, default=str)
-```
-
-**分步调用（高级用法）：**
-
-```python
-cleaner = DataPipelineCleaner()
-
-# 可以跳过 _safe_ingest，手动传入 DataFrame
-raw_df = pd.read_csv("data.csv", dtype=str)
-raw_df = cleaner._standardize_columns_and_text(raw_df)
-raw_df = cleaner._type_alignment(raw_df, {"age": "int"})
-raw_df = cleaner._missing_value_trial(raw_df)
-raw_df = cleaner._outlier_suppression(raw_df)
-
-# 审计状态在 cleaner._audit 中
-print(cleaner._audit)
 ```
 
 ---
@@ -326,10 +237,10 @@ print(cleaner._audit)
 
 ```python
 schema_rules = {
-    "age":         "int",       # pd.to_numeric(errors='coerce') → Int64
-    "salary":      "float",     # pd.to_numeric(errors='coerce') → float64
-    "name":        "str",       # astype("string")
-    "join_date":   "datetime",  # pd.to_datetime(errors='coerce')
+    "age":         "int",       # → Int64 (nullable)
+    "salary":      "float",     # → float64
+    "name":        "str",       # → string
+    "join_date":   "datetime",  # → datetime64[ns]
 }
 ```
 
@@ -339,61 +250,21 @@ schema_rules = {
 
 ## 审计报告
 
-`execute()` 返回的第二个元素是一个完整字典：
-
 ```json
 {
-  "started_at":          "2026-06-24T14:22:37",
-  "finished_at":         "2026-06-24T14:22:37",
-  "original_rows":        10000,
-  "cleaned_rows":         9850,
-  "retention_rate_pct":   98.5,
-  "dropped_columns":      ["useless_survey_field"],
-  "dropped_rows_count":   150,
+  "original_rows": 10000,
+  "cleaned_rows": 9850,
+  "retention_rate_pct": 98.5,
+  "dropped_columns": ["useless_survey_field"],
+  "dropped_rows_count": 150,
   "missing_values_fixed": 423,
-  "outliers_suppressed":  37,
+  "outliers_suppressed": 37,
   "per_column": {
-    "coercion": {
-      "age": {
-        "target_type": "int",
-        "invalid_values_coerced_to_null": 12
-      }
-    },
-    "column_drops": {
-      "useless_survey_field": {
-        "reason": "缺失率 > 70%",
-        "missing_rate": 85.3
-      }
-    },
-    "imputation": {
-      "city": {
-        "strategy": "constant",
-        "fill_value": "Unknown",
-        "count": 35
-      }
-    },
-    "outlier_winsorizing": {
-      "income": {
-        "method": "IQR",
-        "k": 1.5,
-        "lower_fence": 1500.0,
-        "upper_fence": 85000.0,
-        "clamped_low": 0,
-        "clamped_high": 8
-      }
-    }
+    "coercion": { "age": { "target_type": "int", "invalid_values_coerced_to_null": 12 } },
+    "imputation": { "city": { "strategy": "constant", "fill_value": "Unknown", "count": 35 } },
+    "outlier_winsorizing": { "income": { "method": "IQR", "lower_fence": 1500, "upper_fence": 85000 } }
   },
-  "stage_timings": {
-    "safe_ingest":          0.12,
-    "standardize":          0.35,
-    "type_alignment":       0.08,
-    "missing_trial":        0.05,
-    "outlier_suppression":  0.02
-  },
-  "warnings": [
-    "schema_rules 引用了不存在的列 'bonus' —— 已跳过",
-    "12 处异常值已截断到 IQR 边界 (k=1.5)"
-  ]
+  "warnings": []
 }
 ```
 
@@ -402,15 +273,14 @@ schema_rules = {
 ## 关键行为保证
 
 | 场景 | 普通 pandas 脚本 | 本 Skill |
-| ---- | :-------------: | :-----: |
-| 工号 "001" | 变 1 | 保持 "001" |
-| 年龄填 "二十岁" | 直接报错或变形 | 转 NaN → 中位数填充 |
-| 薪资 200000（异常） | 静默删行或不管 | 截断到 IQR 上界 |
-| 长数字身份证 | 变科学计数法 | 字符串原样保留 |
-| 某列 90% 空 | 留着污染后续分析 | 整列砍掉 + 审计记录 |
-| 全角空格列名 | 程序出错 | 自动转 snake_case |
-| 零宽字符混入 | 肉眼看不到、程序出错 | 正则剔除 |
-| 编码检测 | 乱码 | utf-8 → gbk → gb18030 → latin-1 自动回退 |
+| ---- | :--------------: | :------: |
+| 工号 "001" | ❌ 变 1 | ✅ 保持 "001" |
+| 年龄填 "二十岁" | ❌ 报错 | ✅ 转 NaN → 中位数填充 |
+| 薪资 200000（异常） | ❌ 静默删行 | ✅ 截断到 IQR 上界 |
+| 长数字身份证 | ❌ 变科学计数法 | ✅ 字符串保留 |
+| 某列 90% 空 | ❌ 污染分析 | ✅ 整列砍掉 + 审计 |
+| 全角空格列名 | ❌ 程序出错 | ✅ 自动 snake_case |
+| 零宽字符混入 | ❌ 肉眼不见 | ✅ 正则剔除 |
 
 ---
 
@@ -420,7 +290,7 @@ schema_rules = {
 python scripts/clean.py
 ```
 
-内置合成脏数据集测试覆盖：全角空格列名 · 零宽字符 · 全角空格文本 · 中文数字 "三十" · 极端异常值 999 / 200000 · 90% 缺失列。
+内置脏数据测试：全角空格、零宽字符、中文数字、极端异常值、90% 缺失列。
 
 ---
 
@@ -429,16 +299,9 @@ python scripts/clean.py
 ```bash
 pip install pandas pyarrow openpyxl
 
-# Claude Desktop MCP 额外需要:
+# Claude Desktop 额外需要:
 pip install mcp
 ```
-
-| 包 | 用途 |
-| -- | ---- |
-| `pandas >= 2.0` | 核心数据操作，PyArrow 后端降低内存 |
-| `pyarrow` | Pandas 2.0+ ArrowDtype 后端 |
-| `openpyxl` | Excel (.xlsx) 读写 |
-| `mcp` | Claude Desktop MCP 协议（仅 Claude 需要） |
 
 ---
 
@@ -446,89 +309,29 @@ pip install mcp
 
 ```
 data-cleaning-skill/
-│
-├── README.md                          ← 你正在看的文件
-├── SKILL.md                           ← Skill 入口定义 (WorkBuddy/AtomCode/MiMo 共用)
-│
+├── README.md              ← 你正在看的文件
+├── SKILL.md               ← Skill 入口定义
 ├── scripts/
-│   ├── clean.py                       ← ★ DataPipelineCleaner 核心类（686 行）
-│   │                                     五阶段管道 + 端到端测试
-│   ├── profile.py                     ← 数据画像：列统计、空值率、样本值
-│   └── quality_report.py             ← 审计 JSON → Markdown 报告渲染（中/英双语）
-│
-├── adapters/
-│   └── claude/
-│       ├── server.py                  ← Claude Desktop MCP Server
-│       │                                 暴露 clean_data + profile_data 两个 tool
-│       └── README.md                  ← Claude 专用安装说明
-│
-├── references/
-│   ├── chinese_text_normalization.md  ← 中文文本清洗：全角/半角、编码陷阱
-│   └── cleaning_strategies.md         ← 各清洗策略详解与调参指南
-│
-└── assets/
-    └── clean_config.example.json      ← 配置文件示例
+│   ├── clean.py           ← ★ 核心管道类（686 行）
+│   ├── profile.py         ← 数据画像工具
+│   └── quality_report.py  ← 审计报告渲染
+├── adapters/claude/       ← Claude Desktop MCP
+├── references/            ← 中文清洗、策略详解
+└── assets/                ← 配置示例
 ```
 
 ---
 
 ## 常见问题
 
-<details>
-<summary><b>为什么读 CSV 不用 pandas 默认的类型推断？</b></summary>
+**Q：为什么不用 pandas 默认类型推断？**  
+A：默认推断会把 "001" 变 1，长数字变科学计数法。本 Skill 一律 `dtype=str` 读入，只有明确指定的列才转换。
 
-pandas 的自动推断会导致：
-- 工号 `"001"` → `1`（前导零丢失）
-- 长数字 `123456789012345` → `1.234567e+14`（科学计数法）
-- `"N/A"` → 被误判为 NaN
+**Q：异常值为什么不删除？**  
+A：删除会丢信息。Winsorizing 只截断极端值，数据量一条不少。
 
-本 Skill 一律以字符串读入，只有你在 `schema_rules` 里明确指定的列才做类型转换。而且用 `errors='coerce'`，转不动的脏值变成 NaN，交给缺失值阶段填充，不中断管道。
-</details>
-
-<details>
-<summary><b>为什么异常值不删除而是截断？</b></summary>
-
-删除异常行会丢失信息——那条行的其他字段可能是正常的、有价值的。Winsorizing（截断）只压制极端值，数据量一条不少，后续建模更鲁棒。如果你确实需要删除，在拿到干净 DataFrame 后自己 `df[df['col'] > threshold]` 即可。
-</details>
-
-<details>
-<summary><b>可以单独调用某个阶段吗？</b></summary>
-
-可以。五个阶段都是公有方法（虽然是 `_` 开头，但可以调用）：
-
-```python
-cleaner = DataPipelineCleaner()
-df = cleaner._safe_ingest(Path("data.csv"))
-df = cleaner._standardize_columns_and_text(df)
-# ... 需要时才继续
-```
-
-不过推荐直接用 `execute()`，它保证阶段顺序和数据一致性。
-</details>
-
-<details>
-<summary><b>能处理多大体积的数据？</b></summary>
-
-Pandas 2.0+ PyArrow 后端比旧版 NumPy 后端节省 30-50% 内存。10 万行以内轻松处理，百万行也跑得动。如果是 GB 级数据集，建议先用 `profile.py` 看看数据画像，再决定是否需要切分处理。
-</details>
-
-<details>
-<summary><b>和 OpenRefine / Trifacta 比有什么优势？</b></summary>
-
-OpenRefine 和 Trifacta 是 GUI 工具，适合手动探索。本 Skill 的优势在于：
-- **编程接口**：可嵌入 ETL 管道，自动化运行
-- **AI 原生**：对话就能操作，不需要打开另一个软件
-- **四平台通用**：同一份代码在四个 AI 助手里跑
-</details>
-
----
-
-## 贡献指南
-
-欢迎 PR。请确保：
-1. `scripts/clean.py` 的 `if __name__ == '__main__'` 测试块全部通过
-2. 新功能有对应的 Google 风格 docstring
-3. 管道阶段的单向顺序不被破坏
+**Q：能处理多大体积？**  
+A：PyArrow 后端节省 30-50% 内存。10 万行轻松，百万行可跑。
 
 ---
 
