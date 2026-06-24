@@ -453,11 +453,12 @@ class DataPipelineCleaner:
 
         Returns:
             {
-                "summary": one-line human-readable summary,
-                "data_quality_score": 0-100 int,
-                "insights": [list of key findings],
-                "actions_taken": [list of what was done],
-                "recommendations": [list of suggestions for further cleaning]
+                "summary": one-line summary,
+                "data_quality_score": 0-100,
+                "data_quality_dimensions": {completeness, validity, consistency},
+                "insights": [...],
+                "actions_taken": [...],
+                "recommendations": [...]
             }
         """
         original = audit.get("original_rows", 0)
@@ -467,22 +468,26 @@ class DataPipelineCleaner:
         outliers = audit.get("outliers_suppressed", 0)
         sem = audit.get("semantic_audit", {})
         actions = audit.get("cell_actions", [])
-        warnings = audit.get("warnings", [])
 
-        # --- Data quality score (0-100) ---
-        score = 100
-        if original > 0:
-            # Deductions
-            if retention < 99:
-                score -= (99 - retention) * 2
-            if missing > original * 0.01:
-                score -= min(20, (missing / original) * 100)
-            if outliers > original * 0.02:
-                score -= min(15, (outliers / original) * 100)
-            total_invalid = sem.get("by_type", {}).get("invalid", 0)
-            if total_invalid > 0:
-                score -= min(10, (total_invalid / original) * 100)
-        score = max(0, min(100, int(score)))
+        # --- Data quality dimensions (0-1) ---
+        # Completeness: ratio of non-null cells after cleaning
+        if cleaned > 0 and len(df.columns) > 0:
+            total_cells = cleaned * len(df.columns)
+            null_cells = int(df.isna().sum().sum())
+            completeness = round(1 - null_cells / total_cells, 3) if total_cells > 0 else 1.0
+        else:
+            completeness = 1.0
+
+        # Validity: ratio of non-invalid cells (no semantic invalid tags)
+        total_invalid = sem.get("by_type", {}).get("invalid", 0)
+        validity = round(1 - total_invalid / max(original * len(df.columns), 1), 3) if original > 0 else 1.0
+
+        # Consistency: retention rate as proxy (rows kept / original)
+        consistency = round(retention / 100, 3)
+
+        # Overall score (weighted)
+        score = int(completeness * 40 + validity * 35 + consistency * 25)
+        score = max(0, min(100, score))
 
         # --- Summary ---
         parts = []
@@ -495,60 +500,63 @@ class DataPipelineCleaner:
             parts.append(f"tagged {total_tagged} semantic issue(s)")
         if not parts:
             parts.append("no issues detected")
-        summary = f"Cleaned {original} rows → {cleaned} rows ({retention}% retained). " + "; ".join(parts) + f". Quality score: {score}/100."
+        summary = f"Cleaned {original} rows -> {cleaned} rows ({retention}% retained). " + "; ".join(parts) + f". Quality score: {score}/100."
 
         # --- Insights ---
         insights = []
         if missing > original * 0.05:
-            insights.append(f"High missing rate: {missing}/{original} values ({missing/original*100:.1f}%) were filled — review source data quality.")
+            insights.append(f"High missing rate: {missing}/{original} values ({missing/original*100:.1f}%) were filled.")
         if outliers > original * 0.03:
-            insights.append(f"Significant outlier activity: {outliers} values clipped — check if these are real extremes or data errors.")
-        if sem.get("by_type", {}).get("invalid", 0) > 0:
-            n = sem["by_type"]["invalid"]
-            insights.append(f"Found {n} clearly invalid value(s) that were converted to NaN.")
+            insights.append(f"Significant outlier activity: {outliers} values clipped.")
+        if total_invalid > 0:
+            insights.append(f"Found {total_invalid} clearly invalid value(s) converted to NaN.")
         if sem.get("by_type", {}).get("suspicious", 0) > 0:
             n = sem["by_type"]["suspicious"]
-            insights.append(f"{n} value(s) flagged as suspicious but preserved for review.")
+            insights.append(f"{n} value(s) flagged as suspicious but preserved.")
         dropped = audit.get("dropped_columns", [])
         if dropped:
-            insights.append(f"Dropped column(s) due to >70% null: {dropped}.")
+            insights.append(f"Dropped column(s): {dropped}")
+        if completeness < 0.95:
+            insights.append(f"Completeness is {completeness*100:.1f}% — review source data.")
         if not insights:
-            insights.append("Data quality is good — no significant issues found.")
+            insights.append("Data quality is good.")
 
-        # --- Actions taken ---
+        # --- Actions ---
         actions_taken = []
-        if missing > 0:
-            impute_log = audit.get("per_column", {}).get("imputation", {})
-            for col, info in impute_log.items():
-                strategy = info.get("strategy", "unknown")
-                count = info.get("count", 0)
-                actions_taken.append(f"Column '{col}': filled {count} missing value(s) using {strategy}")
-        if outliers > 0:
-            ow = audit.get("per_column", {}).get("outlier_winsorizing", {})
-            for col, info in ow.items():
-                method = info.get("method", "unknown")
-                lo = info.get("lower_fence", "?")
-                hi = info.get("upper_fence", "?")
-                actions_taken.append(f"Column '{col}': clipped to [{lo}, {hi}] using {method}")
+        impute_log = audit.get("per_column", {}).get("imputation", {})
+        for col, info in impute_log.items():
+            actions_taken.append(f"'{col}': filled {info.get('count',0)} missing with {info.get('strategy','?')}")
+        ow = audit.get("per_column", {}).get("outlier_winsorizing", {})
+        for col, info in ow.items():
+            actions_taken.append(f"'{col}': clipped to [{info.get('lower_fence','?')}, {info.get('upper_fence','?')}] via {info.get('method','?')}")
         for a in actions[:5]:
-            actions_taken.append(f"Row {a['row']}, {a['col']}: {a['original']} → {a['action']} ({a['rule']})")
+            actions_taken.append(f"row {a['row']}, {a['col']}: {a['original']} -> {a['action']}")
+        if len(actions) > 5:
+            actions_taken.append(f"... and {len(actions)-5} more cell actions")
 
         # --- Recommendations ---
         recommendations = []
         if retention < 95:
-            recommendations.append("Retention below 95% — consider reviewing deletion criteria.")
+            recommendations.append("Retention below 95% — review deletion criteria.")
         if missing > original * 0.1:
-            recommendations.append("Over 10% missing values — investigate upstream data collection.")
+            recommendations.append("Over 10% missing — investigate upstream data collection.")
         if sem.get("by_type", {}).get("suspicious", 0) > 0:
             recommendations.append("Suspicious values flagged — human review recommended.")
+        if completeness < 0.95:
+            recommendations.append("Low completeness — consider imputation or data collection.")
         if not recommendations:
             recommendations.append("No further action needed.")
 
         return {
             "summary": summary,
             "data_quality_score": score,
+            "data_quality_dimensions": {
+                "completeness": completeness,
+                "validity": validity,
+                "consistency": consistency,
+            },
             "insights": insights,
-            "actions_taken": actions_taken[:10],
+            "actions_taken": actions_taken[:15],
             "recommendations": recommendations,
         }
 
@@ -748,30 +756,125 @@ class DataPipelineCleaner:
         """
         artifacts: list[str] = []
 
-        # Main DataFrame → CSV
-        main_csv = subdir / f"{source_stem}.csv"
-        df.to_csv(main_csv, index=False, encoding=output_encoding)
-        artifacts.append(main_csv.name)
+        # ═══════════════════════════════════════════════════════════════
+        # Data Product Package Output
+        # ═══════════════════════════════════════════════════════════════
 
-        # Audit → JSON
-        audit_json = subdir / f"{source_stem}_audit.json"
-        with open(audit_json, "w", encoding="utf-8") as f:
+        # 1. data/ — cleaned data (CSV + Parquet)
+        data_dir = subdir / "data"
+        data_dir.mkdir(exist_ok=True)
+
+        csv_path = data_dir / f"{source_stem}.csv"
+        df.to_csv(csv_path, index=False, encoding=output_encoding)
+        artifacts.append(f"data/{csv_path.name}")
+
+        try:
+            parquet_path = data_dir / f"{source_stem}.parquet"
+            df.to_parquet(parquet_path, index=False)
+            artifacts.append(f"data/{parquet_path.name}")
+        except Exception:
+            pass  # parquet optional
+
+        # 2. report/ — audit + data quality
+        report_dir = subdir / "report"
+        report_dir.mkdir(exist_ok=True)
+
+        audit_path = report_dir / "audit.json"
+        with open(audit_path, "w", encoding="utf-8") as f:
             json.dump(audit, f, ensure_ascii=False, indent=2, default=str)
-        artifacts.append(audit_json.name)
+        artifacts.append(f"report/audit.json")
+
+        semantic = audit.get("semantic_output", {})
+        if semantic:
+            dq_path = report_dir / "data_quality.json"
+            with open(dq_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "score": semantic.get("data_quality_score", 0),
+                    "dimensions": semantic.get("data_quality_dimensions", {}),
+                    "summary": semantic.get("summary", ""),
+                    "insights": semantic.get("insights", []),
+                    "recommendations": semantic.get("recommendations", []),
+                }, f, ensure_ascii=False, indent=2, default=str)
+            artifacts.append(f"report/data_quality.json")
+
+        # 3. lineage/ — transformation steps
+        lineage_dir = subdir / "lineage"
+        lineage_dir.mkdir(exist_ok=True)
+
+        lineage = {
+            "pipeline_version": "v2",
+            "steps": [],
+        }
+        if audit.get("per_column", {}).get("schema_rules_applied"):
+            lineage["steps"].append({"phase": "type_alignment", "rules": audit["per_column"]["schema_rules_applied"]})
+        if audit.get("semantic_audit", {}).get("total_cells_tagged", 0) > 0:
+            lineage["steps"].append({"phase": "semantic_tagging", "audit": audit["semantic_audit"]})
+        if audit.get("cell_actions"):
+            lineage["steps"].append({"phase": "decision_engine", "actions_count": len(audit["cell_actions"])})
+        if audit.get("missing_rules_audit", {}).get("total_sentinels_converted", 0) > 0:
+            lineage["steps"].append({"phase": "missing_rules", "audit": audit["missing_rules_audit"]})
+        if audit.get("per_column", {}).get("imputation"):
+            lineage["steps"].append({"phase": "imputation", "details": audit["per_column"]["imputation"]})
+        if audit.get("per_column", {}).get("outlier_winsorizing"):
+            lineage["steps"].append({"phase": "outlier_suppression", "details": audit["per_column"]["outlier_winsorizing"]})
+
+        lineage_path = lineage_dir / "transformations.json"
+        with open(lineage_path, "w", encoding="utf-8") as f:
+            json.dump(lineage, f, ensure_ascii=False, indent=2, default=str)
+        artifacts.append(f"lineage/transformations.json")
+
+        # 4. metadata.json — control layer
+        input_info = audit.get("input", {})
+        metadata = {
+            "source_file": input_info.get("file", source_stem),
+            "source_format": input_info.get("format", ""),
+            "rows_before": audit.get("original_rows", 0),
+            "rows_after": audit.get("cleaned_rows", 0),
+            "retention_rate_pct": audit.get("retention_rate_pct", 0),
+            "missing_fixed": audit.get("missing_values_fixed", 0),
+            "outliers_suppressed": audit.get("outliers_suppressed", 0),
+            "data_quality_score": semantic.get("data_quality_score", 0),
+            "pipeline_version": "v2",
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+        }
+        meta_path = subdir / "metadata.json"
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=2, default=str)
+        artifacts.append("metadata.json")
+
+        # 5. samples/ — before vs after (first 5 rows)
+        samples_dir = subdir / "samples"
+        samples_dir.mkdir(exist_ok=True)
+
+        # Read original for before sample
+        try:
+            original_path = input_info.get("path", "")
+            if original_path and Path(original_path).exists():
+                from profile import _read as _profile_read
+                df_before = _profile_read(Path(original_path))
+                before_sample = samples_dir / "before_sample.csv"
+                df_before.head(5).to_csv(before_sample, index=False, encoding=output_encoding)
+                artifacts.append(f"samples/before_sample.csv")
+        except Exception:
+            pass
+
+        after_sample = samples_dir / "after_sample.csv"
+        df.head(5).to_csv(after_sample, index=False, encoding=output_encoding)
+        artifacts.append(f"samples/after_sample.csv")
 
         # SQLite schema (if the source was a database)
-        input_fmt = audit.get("input", {}).get("format", "")
+        input_fmt = input_info.get("format", "")
         if input_fmt in {".db", ".sqlite", ".sqlite3"}:
-            input_path = audit.get("input", {}).get("path", "")
-            if input_path and Path(input_path).exists():
+            original_path = input_info.get("path", "")
+            if original_path and Path(original_path).exists():
                 try:
-                    schema = self.extract_sqlite_schema(input_path)
-                    schema_json = subdir / f"{source_stem}_schema.json"
-                    with open(schema_json, "w", encoding="utf-8") as f:
+                    schema = self.extract_sqlite_schema(original_path)
+                    schema_path = lineage_dir / "schema.json"
+                    with open(schema_path, "w", encoding="utf-8") as f:
                         json.dump(schema, f, ensure_ascii=False, indent=2, default=str)
-                    artifacts.append(schema_json.name)
+                    artifacts.append(f"lineage/schema.json")
                 except Exception:
-                    pass  # schema extraction is best-effort
+                    pass
 
         return artifacts
 
