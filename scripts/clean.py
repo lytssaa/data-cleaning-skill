@@ -1114,11 +1114,40 @@ class DataPipelineCleaner:
             df = df.loc[keep_mask].reset_index(drop=True)
             self._audit["dropped_rows_count"] = drop_count
 
+        # ── Step 2.5: Business-rule value replacement ──────────────────────
+        # Convert specified sentinel values to NaN BEFORE imputation.
+        # This lets business_rules handle logical errors (e.g. height=0)
+        # before statistical methods like IQR run.
+        brules = business_rules or {}
+        replace_count = 0
+        replace_log: dict[str, dict[str, Any]] = {}
+        for col, rule in brules.items():
+            vals_to_replace = rule.get("replace_values")
+            if vals_to_replace is None or col not in df.columns:
+                continue
+            # Convert to numeric first for accurate comparison
+            numeric_col = pd.to_numeric(df[col], errors="coerce")
+            mask = numeric_col.isin(vals_to_replace)
+            replaced = int(mask.sum())
+            if replaced > 0:
+                df.loc[mask, col] = pd.NA
+                replace_count += replaced
+                replace_log[col] = {
+                    "replaced_values": vals_to_replace,
+                    "count": replaced,
+                    "reason": rule.get("missing_means", "business_rule"),
+                }
+        if replace_log:
+            self._audit["per_column"]["value_replacements"] = replace_log
+            self._audit["warnings"].append(
+                f"Business rules replaced {replace_count} sentinel value(s) "
+                f"with NaN across {len(replace_log)} column(s)."
+            )
+
         # ── Step 3: Impute remaining missing values ────────────────────────
         missing_fixed = 0
         business_na_fixed = 0
         imputation_log: dict[str, dict[str, Any]] = {}
-        brules = business_rules or {}
 
         for col in df.columns:
             null_count = int(df[col].isna().sum())
@@ -1130,12 +1159,25 @@ class DataPipelineCleaner:
                 rule = brules[col]
                 fill_val = rule.get("fill", self.UNKNOWN_TEXT)
                 meaning = rule.get("missing_means", "unknown")
+                # Support special fill values: "median", "mean", "mode"
+                # Try numeric conversion for string columns too (auto-detected numerics)
+                numeric_for_fill = pd.to_numeric(df[col], errors="coerce")
+                has_numeric = numeric_for_fill.notna().sum() > 0
+                if fill_val in ("median", "mean") and has_numeric:
+                    if fill_val == "median":
+                        computed = numeric_for_fill.median()
+                    else:
+                        computed = numeric_for_fill.mean()
+                    fill_val = computed if not pd.isna(computed) else 0
+                elif fill_val == "mode":
+                    mode_vals = df[col].mode()
+                    fill_val = mode_vals.iloc[0] if len(mode_vals) > 0 else self.UNKNOWN_TEXT
                 df[col] = df[col].fillna(fill_val)
                 imputation_log[col] = {
                     "strategy": "business_rule",
                     "type": "business_na",
                     "semantic": meaning,
-                    "fill_value": fill_val,
+                    "fill_value": _safe_py(fill_val),
                     "count": null_count,
                 }
                 business_na_fixed += null_count
