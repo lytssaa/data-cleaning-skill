@@ -118,6 +118,12 @@ class DataPipelineCleaner:
         iqr_k: float | None = None,
         lowercase_columns: bool = True,
         output_encoding: str = "utf-8-sig",
+        outlier_method: str = "iqr",
+        outlier_threshold: float = 0.995,
+        zscore_threshold: float = 3.0,
+        business_rules: dict[str, dict[str, Any]] | None = None,
+        expand_nested: bool = False,
+        expected_min_rows: int | None = None,
     ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Run the full five-phase pipeline and return cleaned data + audit.
 
@@ -128,7 +134,7 @@ class DataPipelineCleaner:
             1. Column-name / text-value standardisation (snake_case, NFKC, ghost-char removal)
             2. Type coercion per *schema_rules* with ``errors='coerce'``
             3. Missing-value trial (column/row pruning + imputation)
-            4. Outlier suppression (IQR Winsorizing, never deletion)
+            4. Outlier suppression (multi-strategy, never deletion)
             5. Audit report assembly
 
         Args:
@@ -137,29 +143,22 @@ class DataPipelineCleaner:
                 ``.yaml``, ``.yml``, ``.db``, ``.sqlite``, or ``.sqlite3``.
             schema_rules: Mapping of column name → target dtype.  Supported
                 values: ``'int'``, ``'float'``, ``'str'``, ``'datetime'``.
-                Columns not listed remain as strings.
-                Example: ``{"age": "int", "price": "float", "join_date": "datetime"}``.
+            outlier_method: ``"iqr"`` (default), ``"percentile"`` (best for
+                long-tail distributions like e-commerce/finance), ``"zscore"``,
+                or ``"none"``.
+            outlier_threshold: For percentile method, clamp values beyond
+                this quantile (default 0.995 = top/bottom 0.5%).
+            zscore_threshold: For zscore method, clamp |z| > threshold.
+            business_rules: Per-column semantic rules for missing values.
+                Example: ``{"return_date": {"missing_means": "not_returned",
+                "fill": "未还"}}``.
+            expand_nested: If True, auto-detect and expand nested JSON/list
+                columns.  Set to a list of column names for explicit control.
+            expected_min_rows: If set and actual rows are fewer, emit a
+                warning (useful for YAML/JSON that may be truncated).
 
         Returns:
-            A 2-tuple of ``(cleaned_df, audit_report)`` where *audit_report* is
-            a dict containing:
-
-            - ``original_rows`` (int)
-            - ``cleaned_rows`` (int)
-            - ``retention_rate_pct`` (float)
-            - ``dropped_columns`` (list[str])
-            - ``dropped_rows_count`` (int)
-            - ``missing_values_fixed`` (int)
-            - ``outliers_suppressed`` (int)
-            - ``per_column`` (dict)
-            - ``stage_timings`` (dict)
-            - ``warnings`` (list[str])
-
-        Raises:
-            FileNotFoundError: If *file_path* does not exist.
-            ValueError: If *file_path* has an unsupported extension.
-            RuntimeError: If no encoding in *encoding_sequence* can decode the
-                file.
+            A 2-tuple of ``(cleaned_df, audit_report)``.
         """
         self._audit = {
             "started_at": datetime.now().isoformat(timespec="seconds"),
@@ -169,7 +168,9 @@ class DataPipelineCleaner:
             "dropped_columns": [],
             "dropped_rows_count": 0,
             "missing_values_fixed": 0,
+            "business_na_fixed": 0,
             "outliers_suppressed": 0,
+            "outlier_method": outlier_method,
             "per_column": {},
             "stage_timings": {},
             "warnings": [],
@@ -182,6 +183,12 @@ class DataPipelineCleaner:
         df = self._safe_ingest(fp, engine_kwargs or {})
         self._audit["original_rows"] = len(df)
         self._audit["stage_timings"]["safe_ingest"] = _elapsed(t0)
+        # Row count validation for truncated files
+        if expected_min_rows and len(df) < expected_min_rows:
+            self._audit["warnings"].append(
+                f"Row count ({len(df)}) below expected minimum "
+                f"({expected_min_rows}) for {fp.name}. Data may be truncated."
+            )
         # Record input/output format metadata
         self._audit["input"] = {
             "file": str(fp.name),
@@ -202,12 +209,23 @@ class DataPipelineCleaner:
         self._audit["stage_timings"]["type_alignment"] = _elapsed(t0)
 
         # Phase 3: Missing-value trial
-        df = self._missing_value_trial(df)
+        df = self._missing_value_trial(df, business_rules=business_rules)
         self._audit["stage_timings"]["missing_trial"] = _elapsed(t0)
 
         # Phase 4: Outlier suppression
-        df = self._outlier_suppression(df, iqr_k=iqr_k)
+        df = self._outlier_suppression(
+            df, iqr_k=iqr_k, method=outlier_method,
+            threshold=outlier_threshold, zscore_threshold=zscore_threshold,
+        )
         self._audit["stage_timings"]["outlier_suppression"] = _elapsed(t0)
+
+        # Phase 4.5: Expand nested columns if requested
+        nested_dfs: dict[str, pd.DataFrame] = {}
+        if expand_nested:
+            nested_dfs = self._auto_expand_nested(df, expand_nested)
+            self._audit["nested_tables"] = {
+                col: len(child) for col, child in nested_dfs.items()
+            }
 
         # Phase 5: Final audit assembly
         self._audit["cleaned_rows"] = len(df)
@@ -217,6 +235,7 @@ class DataPipelineCleaner:
             round(cleaned / original * 100, 2) if original > 0 else 0.0
         )
         self._audit["finished_at"] = datetime.now().isoformat(timespec="seconds")
+        self._audit["_nested_dfs"] = nested_dfs
 
         return df, self._audit.copy()
 
@@ -225,7 +244,7 @@ class DataPipelineCleaner:
     # ========================================================================
 
     def _safe_ingest(
-        self, file_path: Path, engine_kwargs: dict[str, Any] | None = None
+        self, file_path: Path, engine_kwargs: dict[str, Any] | None = None,
     ) -> pd.DataFrame:
         """Ingest a file with all columns forced to ``str`` (no type infer).
 
@@ -562,7 +581,10 @@ class DataPipelineCleaner:
     # Phase 3 — Missing-Value Trial
     # ========================================================================
 
-    def _missing_value_trial(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _missing_value_trial(
+        self, df: pd.DataFrame,
+        business_rules: dict[str, dict[str, Any]] | None = None,
+    ) -> pd.DataFrame:
         """Judge and remedy missing values.
 
         Rules (applied in order):
@@ -570,11 +592,16 @@ class DataPipelineCleaner:
                drop the entire column.
             2. **Row execution**: any row with ``> 50%`` null fields →
                drop the row.
-            3. **Imputation**: numeric → median; text/category →
+            3. **Business rules**: per-column semantic rules from
+               *business_rules* override the default strategy.
+            4. **Imputation**: numeric → median; text/category →
                ``self.UNKNOWN_TEXT``.
 
         Args:
             df: DataFrame after type coercion.
+            business_rules: ``{col_name: {missing_means: str, fill: Any}}``.
+                Columns listed here bypass the default imputation and use the
+                specified fill value.  Marked ``type: "business_na"`` in audit.
 
         Returns:
             DataFrame with pruned columns/rows and imputed missing values.
@@ -608,11 +635,29 @@ class DataPipelineCleaner:
 
         # ── Step 3: Impute remaining missing values ────────────────────────
         missing_fixed = 0
+        business_na_fixed = 0
         imputation_log: dict[str, dict[str, Any]] = {}
+        brules = business_rules or {}
 
         for col in df.columns:
             null_count = int(df[col].isna().sum())
             if null_count == 0:
+                continue
+
+            # ── Business rules take priority ──────────────────────────────
+            if col in brules:
+                rule = brules[col]
+                fill_val = rule.get("fill", self.UNKNOWN_TEXT)
+                meaning = rule.get("missing_means", "unknown")
+                df[col] = df[col].fillna(fill_val)
+                imputation_log[col] = {
+                    "strategy": "business_rule",
+                    "type": "business_na",
+                    "semantic": meaning,
+                    "fill_value": fill_val,
+                    "count": null_count,
+                }
+                business_na_fixed += null_count
                 continue
 
             if pd.api.types.is_numeric_dtype(df[col]):
@@ -649,6 +694,7 @@ class DataPipelineCleaner:
             missing_fixed += null_count
 
         self._audit["missing_values_fixed"] = missing_fixed
+        self._audit["business_na_fixed"] = business_na_fixed
         self._audit["per_column"].setdefault("imputation", imputation_log)
 
         # Log column count change
@@ -665,25 +711,35 @@ class DataPipelineCleaner:
     # ========================================================================
 
     def _outlier_suppression(
-        self, df: pd.DataFrame, iqr_k: float | None = None
+        self,
+        df: pd.DataFrame,
+        iqr_k: float | None = None,
+        method: str = "iqr",
+        threshold: float = 0.995,
+        zscore_threshold: float = 3.0,
     ) -> pd.DataFrame:
-        """Winsorize numeric outliers using the IQR fence method.
+        """Suppress outliers using a configurable strategy.
 
-        For every numeric column, values beyond
-        ``[Q1 − k×IQR, Q3 + k×IQR]`` are **clipped** to the boundary —
-        never deleted.
-
-        Args:
-            df: DataFrame with typed numeric columns.
-            iqr_k: Override IQR multiplier. If None, use class default
-                ``self.IQR_K`` (1.5). For long-tail distributions (e-commerce,
-                finance) pass 3.0 or 5.0.
+        Supported methods:
+            - ``"iqr"``: Clip values beyond ``[Q1 − k×IQR, Q3 + k×IQR]``.
+              Use *iqr_k* to control aggressiveness (default 1.5).
+            - ``"percentile"``: Clip values below/above *threshold* quantile.
+              Best for long-tail distributions (e-commerce, finance).
+              Default threshold=0.995 clips top/bottom 0.5%.
+            - ``"zscore"``: Clip values with |z| > *zscore_threshold*.
+            - ``"none"``: Skip outlier suppression entirely.
 
         Returns:
-            DataFrame with outliers clamped to IQR fences.
+            DataFrame with outliers clamped.
         """
+        if method == "none" or method not in ("iqr", "percentile", "zscore"):
+            if method not in ("iqr", "percentile", "zscore", "none"):
+                self._audit["warnings"].append(
+                    f"Unknown outlier_method '{method}', skipping suppression."
+                )
+            return df
+
         df = df.copy()
-        k = iqr_k if iqr_k is not None else self.IQR_K
         total_suppressed = 0
         outlier_log: dict[str, dict[str, Any]] = {}
 
@@ -693,14 +749,46 @@ class DataPipelineCleaner:
             if len(ser) < 4:
                 continue
 
-            q1 = float(ser.quantile(0.25))
-            q3 = float(ser.quantile(0.75))
-            iqr = q3 - q1
-            if iqr == 0:
-                continue
+            col_min = float(ser.min())
+            col_max = float(ser.max())
+            is_integer_col = pd.api.types.is_integer_dtype(df[col])
 
-            lo = q1 - k * iqr
-            hi = q3 + k * iqr
+            # ── IQR method ────────────────────────────────────────────────
+            if method == "iqr":
+                k = iqr_k if iqr_k is not None else self.IQR_K
+                q1 = float(ser.quantile(0.25))
+                q3 = float(ser.quantile(0.75))
+                iqr_val = q3 - q1
+                if iqr_val == 0:
+                    continue
+                lo = q1 - k * iqr_val
+                hi = q3 + k * iqr_val
+                method_label = f"IQR(k={k})"
+                meta = {"k": k, "q1": round(q1, 4), "q3": round(q3, 4)}
+
+            # ── Percentile method ─────────────────────────────────────────
+            elif method == "percentile":
+                lo_thresh = 1.0 - threshold
+                lo = float(ser.quantile(lo_thresh))
+                hi = float(ser.quantile(threshold))
+                if lo >= hi:
+                    continue
+                method_label = f"percentile(thresh={threshold})"
+                meta = {"threshold": threshold,
+                        "lo_quantile": round(lo_thresh, 4),
+                        "hi_quantile": round(threshold, 4)}
+
+            # ── Z-score method ────────────────────────────────────────────
+            else:  # zscore
+                mean_val = float(ser.mean())
+                std_val = float(ser.std())
+                if std_val == 0:
+                    continue
+                lo = mean_val - zscore_threshold * std_val
+                hi = mean_val + zscore_threshold * std_val
+                method_label = f"zscore(threshold={zscore_threshold})"
+                meta = {"mean": round(mean_val, 4),
+                        "std": round(std_val, 4)}
 
             below = int((df[col] < lo).sum())
             above = int((df[col] > hi).sum())
@@ -708,37 +796,45 @@ class DataPipelineCleaner:
             if below + above == 0:
                 continue
 
-            # Integer columns (including nullable Int64) need integer fence
-            # bounds, otherwise clip() produces floats that break the dtype.
-            is_integer_col = pd.api.types.is_integer_dtype(df[col])
-            if is_integer_col:
-                lo_clip = int(np.floor(lo))
-                hi_clip = int(np.ceil(hi))
-            else:
-                lo_clip = lo
-                hi_clip = hi
+            # Integer columns need integer fence bounds
+            lo_clip_val = int(np.floor(lo)) if is_integer_col else lo
+            hi_clip_val = int(np.ceil(hi)) if is_integer_col else hi
 
-            df[col] = df[col].clip(lo_clip, hi_clip)
-            outlier_log[col] = {
-                "method": "IQR",
-                "k": k,
-                "q1": round(q1, 4),
-                "q3": round(q3, 4),
+            # Track original range for impact reporting
+            clipped_vals = df.loc[df[col] > hi, col].dropna()
+            impact_note = None
+            if above > 0 and len(clipped_vals) > 0:
+                top5 = clipped_vals.sort_values(ascending=False).head(3).tolist()
+                impact_note = (
+                    f"{above} values > {round(hi, 1)} clamped; "
+                    f"original max={round(col_max, 1)}, "
+                    f"top clamped values={top5}"
+                )
+
+            df[col] = df[col].clip(lo_clip_val, hi_clip_val)
+            log_entry: dict[str, Any] = {
+                "method": method_label,
                 "lower_fence": round(lo, 4),
                 "upper_fence": round(hi, 4),
                 "clamped_low": below,
                 "clamped_high": above,
+                "original_range": [round(col_min, 4), round(col_max, 4)],
+                **meta,
             }
+            if impact_note:
+                log_entry["impact"] = impact_note
+            outlier_log[col] = log_entry
             total_suppressed += below + above
 
         self._audit["outliers_suppressed"] = total_suppressed
+        self._audit["outlier_method"] = method
         if outlier_log:
             self._audit["per_column"]["outlier_winsorizing"] = outlier_log
 
         if total_suppressed:
             self._audit["warnings"].append(
-                f"{total_suppressed} outlier value(s) clamped to IQR fences "
-                f"(k={k})"
+                f"{total_suppressed} outlier value(s) clamped "
+                f"({method_label if total_suppressed else method})"
             )
 
         return df
@@ -801,6 +897,65 @@ class DataPipelineCleaner:
                     r = {key_col: parent_id, **item}
                     rows.append(r)
         return pd.DataFrame(rows)
+
+    def _auto_expand_nested(
+        self, df: pd.DataFrame, expand_nested: bool | list[str]
+    ) -> dict[str, pd.DataFrame]:
+        """Auto-detect or use explicit list of nested columns to expand.
+
+        Returns a dict of ``{column_name: expanded_DataFrame}``.
+        """
+        result: dict[str, pd.DataFrame] = {}
+        targets: list[str] = []
+
+        if isinstance(expand_nested, list):
+            targets = [c for c in expand_nested if c in df.columns]
+        elif expand_nested is True:
+            # Auto-detect: any string column where >20% of values look like
+            # serialised lists
+            for col in df.select_dtypes(include=["object", "string"]).columns:
+                ser = df[col].dropna()
+                if len(ser) == 0:
+                    continue
+                # Sample up to 50 non-null values for detection
+                sample = ser.head(50)
+                list_like = 0
+                for val in sample:
+                    s = str(val).strip()
+                    if s.startswith("[") and s.endswith("]"):
+                        # Quick check: starts like a JSON array or Python list
+                        list_like += 1
+                        if list_like >= max(3, len(sample) * 0.2):
+                            targets.append(col)
+                            break
+                if col not in targets and list_like > 0:
+                    # Edge case: try parsing a few
+                    try:
+                        import ast
+                        parsed = ast.literal_eval(s)
+                        if isinstance(parsed, list):
+                            targets.append(col)
+                    except (ValueError, SyntaxError):
+                        pass
+
+        if not targets:
+            return result
+
+        for col in targets:
+            try:
+                expanded = self.expand_nested(df, col)
+                if len(expanded) > 0:
+                    result[col] = expanded
+                    self._audit["warnings"].append(
+                        f"Auto-expanded nested column '{col}': "
+                        f"{len(df)} parent rows → {len(expanded)} child rows"
+                    )
+            except Exception as exc:
+                self._audit["warnings"].append(
+                    f"Failed to expand nested column '{col}': {exc}"
+                )
+
+        return result
 
     # ========================================================================
     # Utility — Extract SQLite Schema
