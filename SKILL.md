@@ -2,6 +2,43 @@
 
 A production-level data cleaning skill. Five-phase unidirectional pipeline with full audit trail.
 
+## Pre-decision Checklist (MANDATORY — Before Every execute() Call)
+
+**You MUST answer ALL of these before generating parameters. If you skip this, you WILL produce bad results.**
+
+### 1. Did you profile the data first?
+- [ ] Did you run `profile()` or `_safe_ingest()` to see actual column values?
+- [ ] Did you look at min/max/mean/median for every numeric column?
+- [ ] Did you check for logical impossibilities (height=0, age=-5, salary=99999)?
+
+### 2. What is the outlier strategy per column?
+**FORBIDDEN: Do NOT blindly set `outlier_method="none"` for all columns.**
+
+For EACH numeric column, decide based on data domain:
+
+| Column type | Distribution | Required method | Reason |
+|-------------|-------------|----------------|--------|
+| Height, weight, age, BMI | Normal/symmetric | `"iqr"` | Physical bounds are real |
+| Test scores, response time | Normal/symmetric | `"iqr"` | Physical bounds are real |
+| Salary, revenue, price | Long-tail / power law | `"none"` or `"percentile"` | High values are legitimate |
+| Counts (orders, clicks) | Right-skewed | `"percentile"` or `"none"` | Zero-inflated |
+| ID codes, zip codes | N/A | `"none"` | Not continuous data |
+
+**If in doubt, use `"iqr"` — clipping is safer than ignoring.**
+
+### 3. Did you set business_rules for logical errors?
+- [ ] height ≤ 0 → replace_values=[0, -1]
+- [ ] age < 5 or age > 120 → replace_values with bounds
+- [ ] negative prices/quantities → replace_values
+- [ ] sentinel values (999, -999, 0 for non-zero fields) → replace_values
+
+### 4. Did you verify after execution?
+- [ ] Check `audit["outliers_suppressed"]` — if 0 for numeric data, something is wrong
+- [ ] Check `audit["retention_rate_pct"]` — if < 90%, review what was dropped
+- [ ] Spot-check 3-5 rows to confirm values look reasonable
+
+---
+
 ## AI Agent Workflow (CRITICAL — Follow This Order)
 
 When a user asks to clean data, follow this exact sequence. **Do NOT skip steps.**
@@ -218,6 +255,9 @@ summary = cleaner.run_on_directory(
 3. **Never trust type inference.** CSV/Excel ingested as str, coerced explicitly.
 4. **Never delete outlier rows.** Only clip values to fence bounds.
 5. **Business rules before statistics.** Logical errors (height=0) handled by replace_values; statistical outliers handled by IQR.
+6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
+6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
+6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
 
 ## Bundled Scripts
 
