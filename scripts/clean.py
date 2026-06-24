@@ -436,7 +436,121 @@ class DataPipelineCleaner:
                 for sname, sdf in sheet_dfs.items()
             }
 
+        # ═══════════════════════════════════════════════════════════════
+        # Phase 6: Semantic Output Layer (for AI consumption)
+        # ═══════════════════════════════════════════════════════════════
+        self._audit["semantic_output"] = self._build_semantic_output(df, self._audit)
+
         return df, self._audit.copy()
+
+    # ========================================================================
+    # Semantic Output Builder (AI-native layer)
+    # ========================================================================
+
+    @staticmethod
+    def _build_semantic_output(df: pd.DataFrame, audit: dict) -> dict:
+        """Build AI-friendly structured output from raw audit data.
+
+        Returns:
+            {
+                "summary": one-line human-readable summary,
+                "data_quality_score": 0-100 int,
+                "insights": [list of key findings],
+                "actions_taken": [list of what was done],
+                "recommendations": [list of suggestions for further cleaning]
+            }
+        """
+        original = audit.get("original_rows", 0)
+        cleaned = audit.get("cleaned_rows", 0)
+        retention = audit.get("retention_rate_pct", 100)
+        missing = audit.get("missing_values_fixed", 0)
+        outliers = audit.get("outliers_suppressed", 0)
+        sem = audit.get("semantic_audit", {})
+        actions = audit.get("cell_actions", [])
+        warnings = audit.get("warnings", [])
+
+        # --- Data quality score (0-100) ---
+        score = 100
+        if original > 0:
+            # Deductions
+            if retention < 99:
+                score -= (99 - retention) * 2
+            if missing > original * 0.01:
+                score -= min(20, (missing / original) * 100)
+            if outliers > original * 0.02:
+                score -= min(15, (outliers / original) * 100)
+            total_invalid = sem.get("by_type", {}).get("invalid", 0)
+            if total_invalid > 0:
+                score -= min(10, (total_invalid / original) * 100)
+        score = max(0, min(100, int(score)))
+
+        # --- Summary ---
+        parts = []
+        if missing > 0:
+            parts.append(f"filled {missing} missing value(s)")
+        if outliers > 0:
+            parts.append(f"clipped {outliers} outlier(s)")
+        total_tagged = sem.get("total_cells_tagged", 0)
+        if total_tagged > 0:
+            parts.append(f"tagged {total_tagged} semantic issue(s)")
+        if not parts:
+            parts.append("no issues detected")
+        summary = f"Cleaned {original} rows → {cleaned} rows ({retention}% retained). " + "; ".join(parts) + f". Quality score: {score}/100."
+
+        # --- Insights ---
+        insights = []
+        if missing > original * 0.05:
+            insights.append(f"High missing rate: {missing}/{original} values ({missing/original*100:.1f}%) were filled — review source data quality.")
+        if outliers > original * 0.03:
+            insights.append(f"Significant outlier activity: {outliers} values clipped — check if these are real extremes or data errors.")
+        if sem.get("by_type", {}).get("invalid", 0) > 0:
+            n = sem["by_type"]["invalid"]
+            insights.append(f"Found {n} clearly invalid value(s) that were converted to NaN.")
+        if sem.get("by_type", {}).get("suspicious", 0) > 0:
+            n = sem["by_type"]["suspicious"]
+            insights.append(f"{n} value(s) flagged as suspicious but preserved for review.")
+        dropped = audit.get("dropped_columns", [])
+        if dropped:
+            insights.append(f"Dropped column(s) due to >70% null: {dropped}.")
+        if not insights:
+            insights.append("Data quality is good — no significant issues found.")
+
+        # --- Actions taken ---
+        actions_taken = []
+        if missing > 0:
+            impute_log = audit.get("per_column", {}).get("imputation", {})
+            for col, info in impute_log.items():
+                strategy = info.get("strategy", "unknown")
+                count = info.get("count", 0)
+                actions_taken.append(f"Column '{col}': filled {count} missing value(s) using {strategy}")
+        if outliers > 0:
+            ow = audit.get("per_column", {}).get("outlier_winsorizing", {})
+            for col, info in ow.items():
+                method = info.get("method", "unknown")
+                lo = info.get("lower_fence", "?")
+                hi = info.get("upper_fence", "?")
+                actions_taken.append(f"Column '{col}': clipped to [{lo}, {hi}] using {method}")
+        for a in actions[:5]:
+            actions_taken.append(f"Row {a['row']}, {a['col']}: {a['original']} → {a['action']} ({a['rule']})")
+
+        # --- Recommendations ---
+        recommendations = []
+        if retention < 95:
+            recommendations.append("Retention below 95% — consider reviewing deletion criteria.")
+        if missing > original * 0.1:
+            recommendations.append("Over 10% missing values — investigate upstream data collection.")
+        if sem.get("by_type", {}).get("suspicious", 0) > 0:
+            recommendations.append("Suspicious values flagged — human review recommended.")
+        if not recommendations:
+            recommendations.append("No further action needed.")
+
+        return {
+            "summary": summary,
+            "data_quality_score": score,
+            "insights": insights,
+            "actions_taken": actions_taken[:10],
+            "recommendations": recommendations,
+        }
 
     # ========================================================================
     # Batch Processing — run_on_directory
