@@ -120,6 +120,7 @@ class DataPipelineCleaner:
         """
         self.encoding_sequence = encoding_sequence
         self._audit: dict[str, Any] = {}
+        self._engine_kwargs: dict = {}
         # Programmatic access to extra DataFrames (NOT in audit — audit is JSON-safe)
         self._nested_dfs: dict[str, pd.DataFrame] = {}
         self._sheet_dfs: dict[str, pd.DataFrame] = {}
@@ -1061,6 +1062,10 @@ class DataPipelineCleaner:
         df = df.copy()
         total_rows = len(df)
         total_cols_before = df.shape[1]
+
+        # Convert empty/whitespace-only strings to NaN so they get imputed
+        for col in df.select_dtypes(include=["object", "string"]).columns:
+            df[col] = df[col].replace(r"^\s*$", pd.NA, regex=True)
 
         # ── Step 1: Drop fatally-missing columns (>70%) ────────────────────
         col_missing_pct = df.isna().mean()
