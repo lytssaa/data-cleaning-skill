@@ -204,6 +204,99 @@ The pipeline automatically converts these string literals to real NaN (case-inse
 | `"percentile"` | Moderate long-tail, want to clip top/bottom 0.5% | `outlier_threshold` (default 0.995) |
 | `"zscore"` | Known normal distribution | `zscore_threshold` (default 3.0) |
 
+### Per-column outlier rules (v2)
+
+Override the global method per column:
+
+```python
+cleaner.execute(
+    "data.csv",
+    schema_rules={"age": "int", "income": "float"},
+    outlier_rules={
+        "income": {"method": "percentile", "threshold": 0.995},
+        "age": {"method": "iqr"},
+    },
+)
+```
+
+## Semantic Rules (v2)
+
+Tag values by semantic meaning **before** any data modification:
+
+```python
+semantic_rules = {
+    "age": {
+        "invalid": [-5, -1],       # → NaN (clearly wrong)
+        "suspicious": [150]         # → flagged but KEPT
+    },
+    "rooms": {
+        "invalid": [-1],
+        "suspicious": [0]           # 0 might be valid (full hotel)
+    }
+}
+```
+
+| Tag | Effect | Example |
+|-----|--------|---------|
+| `invalid` | Value → NaN → fill | age=-5 is impossible |
+| `suspicious` | Value kept, flagged in audit | rooms=0 might be valid |
+
+## Missing Rules (v2) — Sentinel Handling
+
+Sentinel values are "missing placeholders" (like -999, 9999), NOT semantic errors. Separate from semantic_rules:
+
+```python
+missing_rules = {
+    "income": {"sentinel": [-999]},         # → NaN → median fill
+    "membership_years": {"sentinel": [9999]}
+}
+```
+
+**Why separate?** Sentinel = "this field has no data", not "this value is wrong". Different processing path:
+- semantic invalid → wrong data → fix
+- missing sentinel → no data → fill
+
+## Ingestion Config (v2)
+
+Unified data source configuration:
+
+```python
+ingestion_config = {
+    "db": {"table": "orders"},      # SQLite table selection
+    "expand_nested": True,           # Auto-expand JSON columns
+    "expected_min_rows": 100         # Warn if fewer rows
+}
+```
+
+## Semantic Output (v2) — AI-native layer
+
+Every `execute()` call now includes `audit["semantic_output"]`:
+
+```python
+cleaned_df, audit = cleaner.execute("data.csv", schema_rules={"age": "int"})
+so = audit["semantic_output"]
+
+print(so["summary"])
+# "Cleaned 10000 rows → 9850 rows (98.5% retained). filled 423 missing..."
+
+print(so["data_quality_score"])
+# 89
+
+for insight in so["insights"]:
+    print(f"- {insight}")
+
+for rec in so["recommendations"]:
+    print(f"- {rec}")
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `summary` | str | One-line summary for AI to relay |
+| `data_quality_score` | int 0-100 | Auto-calculated health score |
+| `insights` | list[str] | Key findings from cleaning |
+| `actions_taken` | list[str] | Specific operations performed |
+| `recommendations` | list[str] | Next steps / human review flags |
+
 ## Quick Start
 
 ```python
@@ -211,22 +304,25 @@ from scripts.clean import DataPipelineCleaner
 
 cleaner = DataPipelineCleaner()
 
-# Single file
+# Basic
 cleaned_df, audit = cleaner.execute(
     "data.csv",
     schema_rules={"age": "int", "salary": "float"},
-    business_rules={"salary": {"replace_values": [0, -1], "fill": "median"}},
-    outlier_method="iqr",
-    iqr_k=1.5,
 )
 
-# Batch
-summary = cleaner.run_on_directory(
-    input_dir="./raw",
-    output_dir="./cleaned",
-    schema_rules={"amount": "float"},
-    outlier_method="none",
+# v2 with semantic rules
+cleaned_df, audit = cleaner.execute(
+    "data.csv",
+    schema_rules={"age": "int", "salary": "float"},
+    semantic_rules={"age": {"invalid": [-5, -1], "suspicious": [150]}},
+    missing_rules={"salary": {"sentinel": [-999]}},
+    outlier_rules={"salary": {"method": "iqr"}},
 )
+
+# AI reads the semantic output
+so = audit["semantic_output"]
+print(so["summary"])
+print(f"Quality: {so['data_quality_score']}/100")
 ```
 
 ## Audit Report
@@ -256,6 +352,8 @@ summary = cleaner.run_on_directory(
 4. **Never delete outlier rows.** Only clip values to fence bounds.
 5. **Business rules before statistics.** Logical errors (height=0) handled by replace_values; statistical outliers handled by IQR.
 6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
+7. **Semantic separation.** invalid/suspicious (semantic layer) vs sentinel (missing layer) — different concepts, different processing paths.
+8. **AI-native output.** Every execution returns a `semantic_output` with summary, score, insights, and recommendations — not just raw audit JSON.
 6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
 6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
 

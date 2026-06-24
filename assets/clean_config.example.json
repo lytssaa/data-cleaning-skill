@@ -1,19 +1,46 @@
 {
-  "missing_numeric": "median",
-  "missing_categorical": "mode",
-  "missing_categorical_value": "UNKNOWN",
-  "missing_datetime": "ffill",
-  "duplicates": "drop",
-  "duplicate_subset": [],
-  "text_case": "keep",
-  "text_strip": true,
-  "fullwidth_to_halfwidth": true,
-  "outlier_method": "iqr",
-  "outlier_iqr_k": 1.5,
-  "type_coercion": {
-    "order_date": "datetime",
-    "amount": "float",
-    "quantity": "int"
+  "schema_rules": {
+    "age": "int",
+    "income": "float",
+    "join_date": "datetime"
   },
-  "preserve_original": true
+  "semantic_rules": {
+    "age": {
+      "invalid": [-5, -1],
+      "suspicious": [150]
+    },
+    "rooms": {
+      "invalid": [-1],
+      "suspicious": [0]
+    }
+  },
+  "missing_rules": {
+    "income": {
+      "sentinel": [-999]
+    },
+    "membership_years": {
+      "sentinel": [9999]
+    }
+  },
+  "business_rules": {
+    "height_cm": {
+      "replace_values": [0],
+      "fill": "median",
+      "missing_means": "impossible value"
+    }
+  },
+  "outlier_rules": {
+    "income": {
+      "method": "percentile",
+      "threshold": 0.995
+    },
+    "age": {
+      "method": "iqr"
+    }
+  },
+  "outlier_method": "iqr",
+  "iqr_k": 1.5,
+  "expand_nested": false,
+  "db_table": "",
+  "explain": true
 }

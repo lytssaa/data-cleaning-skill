@@ -1,16 +1,14 @@
-# Claude Desktop MCP Adapter
+# MCP Server — Data Cleaner v2
 
-MCP server wrapping `DataPipelineCleaner` for Claude Desktop.
+Claude Desktop / MiMo Code MCP adapter for `DataPipelineCleaner`.
 
-## Install
+## Setup
 
 ```bash
 pip install mcp pandas pyarrow openpyxl
 ```
 
-## Configure Claude Desktop
-
-Add to `claude_desktop_config.json`:
+Claude Desktop config (`claude_desktop_config.json`):
 
 ```json
 {
@@ -24,24 +22,40 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-## Available Tools
+## Tools
 
 ### `clean_data`
 
-Full five-phase pipeline.
+Full v2 pipeline with semantic rules, per-column outlier methods, and AI-native output.
 
-```
-Clean the file sales.csv, convert age to int and revenue to float
-```
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | str | required | Data file path |
+| `schema_rules` | JSON str | `{}` | Column→type mapping |
+| `semantic_rules` | JSON str | `{}` | invalid/suspicious tagging |
+| `missing_rules` | JSON str | `{}` | sentinel→NaN |
+| `business_rules` | JSON str | `{}` | Legacy replace_values |
+| `outlier_rules` | JSON str | `{}` | Per-column outlier method |
+| `outlier_method` | str | `"iqr"` | Global: iqr/percentile/zscore/none |
+| `iqr_k` | float | 1.5 | IQR sensitivity |
+| `expand_nested` | bool | false | Expand nested JSON |
+| `db_table` | str | `""` | SQLite table name |
 
-Claude will invoke `clean_data` with `schema_rules={"age": "int", "revenue": "float"}`.
+Returns audit with `semantic_output` (summary, score, insights, recommendations).
 
 ### `profile_data`
 
-Quick structural overview before cleaning.
+Quick data profile with column name standardization mapping.
 
-```
-Profile survey_results.xlsx first
-```
+## Example Usage
 
-Returns column-level stats (null counts, unique values, samples).
+```json
+{
+  "file_path": "data.csv",
+  "schema_rules": {"age": "int", "salary": "float"},
+  "semantic_rules": {"age": {"invalid": [-5, -1], "suspicious": [150]}},
+  "missing_rules": {"income": {"sentinel": [-999]}},
+  "outlier_rules": {"salary": {"method": "iqr"}},
+  "outlier_method": "iqr"
+}
+```
