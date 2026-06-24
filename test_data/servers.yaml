@@ -1,0 +1,247 @@
+# 服务器集群监控
+total_servers: 30
+groups:
+  - 生产环境
+  - 测试环境
+  - 预发布环境
+servers:
+  - hostname: 生产环境-node-01
+    ip: 10.0.1.172
+    cpu_cores: 2
+    memory_gb: 16
+    disk_gb: 1000
+    cpu_usage_pct: 16.5
+    status: running
+    deploy_date: 2025-12-13
+  - hostname: 生产环境-node-02
+    ip: 10.0.5.216
+    cpu_cores: 4
+    memory_gb: 16
+    disk_gb: 500
+    cpu_usage_pct: 101.8
+    status: running
+    deploy_date: 2025-11-27
+  - hostname: 生产环境-node-03
+    ip: 10.0.9.237
+    cpu_cores: 16
+    memory_gb: 16
+    disk_gb: 1000
+    cpu_usage_pct: 35.0
+    status: running
+    deploy_date: 2025-11-09
+  - hostname: 生产环境-node-04
+    ip: 10.0.1.204
+    cpu_cores: 4
+    memory_gb: 16
+    disk_gb: 2000
+    cpu_usage_pct: 100.6
+    status: stopped
+    deploy_date: 2025-05-02
+  - hostname: 生产环境-node-05
+    ip: 10.0.9.19
+    cpu_cores: 4
+    memory_gb: 8
+    disk_gb: 2000
+    cpu_usage_pct: 40.7
+    status: stopped
+    deploy_date: 2025-02-01
+  - hostname: 生产环境-node-06
+    ip: 10.0.5.221
+    cpu_cores: 4
+    memory_gb: 32
+    disk_gb: 100
+    cpu_usage_pct: 74.1
+    status: unknown
+    deploy_date: 2025-11-13
+  - hostname: 生产环境-node-07
+    ip: 10.0.9.51
+    cpu_cores: 2
+    memory_gb: 8
+    disk_gb: 1000
+    cpu_usage_pct: 109.9
+    status: running
+    deploy_date: 2025-07-11
+  - hostname: 生产环境-node-08
+    ip: 10.0.4.203
+    cpu_cores: 2
+    memory_gb: 16
+    disk_gb: 2000
+    cpu_usage_pct: 5.3
+    status: running
+    deploy_date: 2025-02-04
+  - hostname: 生产环境-node-09
+    ip: 10.0.2.237
+    cpu_cores: 4
+    memory_gb: 32
+    disk_gb: 500
+    cpu_usage_pct: 8.6
+    status: stopped
+    deploy_date: 2025-06-20
+  - hostname: 生产环境-node-10
+    ip: 10.0.7.160
+    cpu_cores: 2
+    memory_gb: 64
+    disk_gb: 500
+    cpu_usage_pct: 69.4
+    status: unknown
+    deploy_date: 2026-06-24
+  - hostname: 测试环境-node-01
+    ip: 10.0.2.249
+    cpu_cores: 8
+    memory_gb: 8
+    disk_gb: 500
+    cpu_usage_pct: 81.4
+    status: running
+    deploy_date: 2026-03-11
+  - hostname: 测试环境-node-02
+    ip: 10.0.8.19
+    cpu_cores: 4
+    memory_gb: 16
+    disk_gb: 10000
+    cpu_usage_pct: 100.2
+    status: running
+    deploy_date: 2025-12-28
+  - hostname: 测试环境-node-03
+    ip: 10.0.4.29
+    cpu_cores: 8
+    memory_gb: 8
+    disk_gb: 100
+    cpu_usage_pct: 65.2
+    status: running
+    deploy_date: 2025-09-02
+  - hostname: 测试环境-node-04
+    ip: 10.0.5.67
+    cpu_cores: 8
+    memory_gb: 64
+    disk_gb: 2000
+    cpu_usage_pct: 98.0
+    status: unknown
+    deploy_date: 2025-09-24
+  - hostname: 测试环境-node-05
+    ip: 10.0.5.83
+    cpu_cores: 8
+    memory_gb: 8
+    disk_gb: 1000
+    cpu_usage_pct: 57.3
+    status: running
+    deploy_date: 2026-05-17
+  - hostname: 测试环境-node-06
+    ip: 10.0.1.134
+    cpu_cores: 4
+    memory_gb: 8
+    disk_gb: 1000
+    cpu_usage_pct: 115.0
+    status: running
+    deploy_date: 2025-04-22
+  - hostname: 测试环境-node-07
+    ip: 10.0.2.204
+    cpu_cores: 4
+    memory_gb: 64
+    disk_gb: 1000
+    cpu_usage_pct: 7.4
+    status: error
+    deploy_date: 2026-03-22
+  - hostname: 测试环境-node-08
+    ip: 10.0.1.54
+    cpu_cores: 8
+    memory_gb: 16
+    disk_gb: 1000
+    cpu_usage_pct: 92.5
+    status: running
+    deploy_date: 2025-03-11
+  - hostname: 测试环境-node-09
+    ip: 10.0.2.153
+    cpu_cores: 8
+    memory_gb: 8
+    disk_gb: 2000
+    cpu_usage_pct: 81.4
+    status: running
+    deploy_date: 2025-01-21
+  - hostname: 测试环境-node-10
+    ip: 10.0.7.140
+    cpu_cores: 4
+    memory_gb: 8
+    disk_gb: 500
+    cpu_usage_pct: 90.8
+    status: running
+    deploy_date: 2025-02-14
+  - hostname: 预发布环境-node-01
+    ip: 10.0.2.22
+    cpu_cores: 8
+    memory_gb: 32
+    disk_gb: 10000
+    cpu_usage_pct: 63.7
+    status: running
+    deploy_date: 2026-02-13
+  - hostname: 预发布环境-node-02
+    ip: 10.0.1.209
+    cpu_cores: 8
+    memory_gb: 4
+    disk_gb: 1000
+    cpu_usage_pct: 16.6
+    status: 
+    deploy_date: 2025-03-02
+  - hostname: 预发布环境-node-03
+    ip: 10.0.7.31
+    cpu_cores: 32
+    memory_gb: 4
+    disk_gb: 500
+    cpu_usage_pct: 73.8
+    status: running
+    deploy_date: 2026-05-04
+  - hostname: 预发布环境-node-04
+    ip: 10.0.2.25
+    cpu_cores: 4
+    memory_gb: 16
+    disk_gb: 1000
+    cpu_usage_pct: 14.4
+    status: stopped
+    deploy_date: 2025-10-10
+  - hostname: 预发布环境-node-05
+    ip: 10.0.8.22
+    cpu_cores: 4
+    memory_gb: 32
+    disk_gb: 1000
+    cpu_usage_pct: 80.9
+    status: stopped
+    deploy_date: 2025-11-28
+  - hostname: 预发布环境-node-06
+    ip: 10.0.7.147
+    cpu_cores: 8
+    memory_gb: 16
+    disk_gb: 2000
+    cpu_usage_pct: 85.8
+    status: running
+    deploy_date: 2025-01-21
+  - hostname: 预发布环境-node-07
+    ip: 10.0.1.55
+    cpu_cores: 8
+    memory_gb: 16
+    disk_gb: 100
+    cpu_usage_pct: 18.7
+    status: running
+    deploy_date: 2025-09-07
+  - hostname: 预发布环境-node-08
+    ip: 10.0.1.64
+    cpu_cores: 4
+    memory_gb: 16
+    disk_gb: 10000
+    cpu_usage_pct: 40.6
+    status: error
+    deploy_date: 2025-12-23
+  - hostname: 预发布环境-node-09
+    ip: 10.0.1.114
+    cpu_cores: 8
+    memory_gb: 64
+    disk_gb: 1000
+    cpu_usage_pct: 25.2
+    status: running
+    deploy_date: 2025-02-15
+  - hostname: 预发布环境-node-10
+    ip: 10.0.7.221
+    cpu_cores: 2
+    memory_gb: 128
+    disk_gb: 1000
+    cpu_usage_pct: 26.6
+    status: running
+    deploy_date: 2026-03-08

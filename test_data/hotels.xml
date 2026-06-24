@@ -1,0 +1,3603 @@
+<?xml version="1.0" ?>
+<hotels>
+  <hotel id="H1000">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>697.85</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1001">
+    <name>锦江之星(杭州)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>1482.83</price_per_night>
+    <rating>3.7</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1002">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1224.55</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1003">
+    <name>万豪(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>829.48</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1004">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>988.82</price_per_night>
+    <rating>2.3</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>WiFi,游泳池</facilities>
+  </hotel>
+  <hotel id="H1005">
+    <name>7天(杭州)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>591.9</price_per_night>
+    <rating>4.0</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>健身房,餐厅,游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1006">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1674.57</price_per_night>
+    <rating>4.2</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1007">
+    <name>凯悦(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1696.52</price_per_night>
+    <rating>1.0</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1008">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>920.27</price_per_night>
+    <rating>5.5</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>早餐,WiFi,餐厅</facilities>
+  </hotel>
+  <hotel id="H1009">
+    <name>凯悦(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1173.01</price_per_night>
+    <rating>4.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1010">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1321.0</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>Spa,游泳池,早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1011">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1378.08</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1012">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1810.44</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐,餐厅</facilities>
+  </hotel>
+  <hotel id="H1013">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>160.68</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>停车场,餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1014">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1791.21</price_per_night>
+    <rating>4.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,停车场,WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1015">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>870.16</price_per_night>
+    <rating>3.2</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi,停车场,餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1016">
+    <name>锦江之星(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1821.56</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1017">
+    <name>7天(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>3.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1018">
+    <name>锦江之星(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1129.06</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1019">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>131.98</price_per_night>
+    <rating>4.0</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,游泳池</facilities>
+  </hotel>
+  <hotel id="H1020">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>1.9</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>餐厅,游泳池,健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1021">
+    <name>全季(成都)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1794.79</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa,WiFi,早餐,健身房</facilities>
+  </hotel>
+  <hotel id="H1022">
+    <name>全季(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1754.36</price_per_night>
+    <rating>3.7</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1023">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1109.32</price_per_night>
+    <rating>5.5</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>WiFi,早餐,餐厅</facilities>
+  </hotel>
+  <hotel id="H1024">
+    <name>洲际(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night/>
+    <rating>1.1</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>健身房,WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1025">
+    <name>凯悦(深圳)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1734.92</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,Spa,游泳池</facilities>
+  </hotel>
+  <hotel id="H1026">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1923.62</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa,停车场,WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1027">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1371.78</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1028">
+    <name>全季(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1664.48</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1029">
+    <name>7天(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>803.23</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1030">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1607.1</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1031">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1265.48</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1032">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1802.53</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1033">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1772.19</price_per_night>
+    <rating>3.1</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>停车场,健身房</facilities>
+  </hotel>
+  <hotel id="H1034">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>625.9</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐,停车场,WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1035">
+    <name>全季(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>197.53</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>游泳池,餐厅,WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1036">
+    <name>如家(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>406.65</price_per_night>
+    <rating>5.5</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1037">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>903.29</price_per_night>
+    <rating>4.0</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1038">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1777.32</price_per_night>
+    <rating>1.8</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1039">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>128.7</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,游泳池,WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1040">
+    <name>凯悦(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1507.41</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>餐厅,停车场,早餐,健身房</facilities>
+  </hotel>
+  <hotel id="H1041">
+    <name>万豪(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1421.02</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>游泳池,Spa,停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1042">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>842.84</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>Spa,餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1043">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1307.83</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,停车场,游泳池</facilities>
+  </hotel>
+  <hotel id="H1044">
+    <name>亚朵(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1803.55</price_per_night>
+    <rating>3.1</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1045">
+    <name>全季(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1626.44</price_per_night>
+    <rating>1.9</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场,餐厅</facilities>
+  </hotel>
+  <hotel id="H1046">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1713.69</price_per_night>
+    <rating>4.3</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>健身房,早餐</facilities>
+  </hotel>
+  <hotel id="H1047">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>280.93</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>游泳池,餐厅,健身房</facilities>
+  </hotel>
+  <hotel id="H1048">
+    <name>7天(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>480.32</price_per_night>
+    <rating>4.9</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1049">
+    <name>希尔顿(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>959.46</price_per_night>
+    <rating>4.1</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa,餐厅,停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1050">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>283.38</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>早餐,健身房,餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1051">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>996.85</price_per_night>
+    <rating>4.7</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1052">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>419.16</price_per_night>
+    <rating>3.2</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1053">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>244.37</price_per_night>
+    <rating>4.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1054">
+    <name>汉庭(深圳)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>542.59</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>WiFi,早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1055">
+    <name>亚朵(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>3.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1056">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>115.89</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>游泳池,健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1057">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1379.52</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>健身房,停车场,餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1058">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1051.31</price_per_night>
+    <rating>4.2</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>游泳池,餐厅,停车场,Spa</facilities>
+  </hotel>
+  <hotel id="H1059">
+    <name>如家(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1388.48</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>游泳池,早餐</facilities>
+  </hotel>
+  <hotel id="H1060">
+    <name>洲际(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1078.6</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐,游泳池,健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1061">
+    <name>全季(三亚)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1479.38</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,早餐,游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1062">
+    <name>凯悦(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>780.97</price_per_night>
+    <rating>1.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,Spa,游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1063">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>871.78</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>WiFi,餐厅</facilities>
+  </hotel>
+  <hotel id="H1064">
+    <name>如家(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1763.42</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1065">
+    <name>7天(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>418.53</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,Spa,早餐</facilities>
+  </hotel>
+  <hotel id="H1066">
+    <name>亚朵(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1456.99</price_per_night>
+    <rating>4.3</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1067">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night/>
+    <rating>2.9</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1068">
+    <name>凯悦(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1648.6</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,游泳池,健身房</facilities>
+  </hotel>
+  <hotel id="H1069">
+    <name>锦江之星(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>248.05</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐,餐厅,健身房</facilities>
+  </hotel>
+  <hotel id="H1070">
+    <name>亚朵(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1403.86</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1071">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1221.22</price_per_night>
+    <rating>3.1</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>餐厅,健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1072">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>744.86</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>停车场,健身房</facilities>
+  </hotel>
+  <hotel id="H1073">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1240.85</price_per_night>
+    <rating>4.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,Spa,健身房,早餐</facilities>
+  </hotel>
+  <hotel id="H1074">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1950.97</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1075">
+    <name>万豪(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>450.09</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1076">
+    <name>全季(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1200.25</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,WiFi,餐厅</facilities>
+  </hotel>
+  <hotel id="H1077">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1795.97</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1078">
+    <name>7天(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1762.61</price_per_night>
+    <rating>4.7</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1079">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>905.03</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1080">
+    <name>亚朵(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1218.47</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>健身房,游泳池,餐厅</facilities>
+  </hotel>
+  <hotel id="H1081">
+    <name>凯悦(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1799.7</price_per_night>
+    <rating>4.2</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>Spa,健身房,WiFi,餐厅</facilities>
+  </hotel>
+  <hotel id="H1082">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>203.28</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>早餐,停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1083">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>421.16</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1084">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1819.62</price_per_night>
+    <rating>4.0</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>游泳池,健身房</facilities>
+  </hotel>
+  <hotel id="H1085">
+    <name>如家(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>374.89</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1086">
+    <name>7天(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>557.1</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,Spa,早餐</facilities>
+  </hotel>
+  <hotel id="H1087">
+    <name>希尔顿(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>964.96</price_per_night>
+    <rating>4.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>早餐,游泳池,餐厅</facilities>
+  </hotel>
+  <hotel id="H1088">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>950.12</price_per_night>
+    <rating>4.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1089">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1508.39</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1090">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1122.71</price_per_night>
+    <rating>5.3</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>游泳池,早餐,餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1091">
+    <name>凯悦(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1587.41</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1092">
+    <name>洲际(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night/>
+    <rating>1.2</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1093">
+    <name>希尔顿(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>794.75</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,Spa,游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1094">
+    <name>全季(北京)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>1633.06</price_per_night>
+    <rating>4.2</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1095">
+    <name>7天(成都)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1753.92</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,Spa,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1096">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1298.07</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1097">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>732.43</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅,游泳池,健身房,早餐</facilities>
+  </hotel>
+  <hotel id="H1098">
+    <name>万豪(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1639.0</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1099">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1406.75</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>Spa,WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1100">
+    <name>希尔顿(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>617.94</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>Spa,WiFi,游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1101">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1927.51</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,Spa,餐厅</facilities>
+  </hotel>
+  <hotel id="H1102">
+    <name>全季(北京)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1338.87</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1103">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1724.41</price_per_night>
+    <rating>4.9</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1104">
+    <name>全季(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1410.37</price_per_night>
+    <rating>1.8</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1105">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1306.39</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,游泳池,早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1106">
+    <name>万豪(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1983.77</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1107">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>4.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,Spa,游泳池</facilities>
+  </hotel>
+  <hotel id="H1108">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>520.02</price_per_night>
+    <rating>4.9</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi,停车场,游泳池,餐厅</facilities>
+  </hotel>
+  <hotel id="H1109">
+    <name>如家(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1176.03</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>餐厅,早餐,停车场,游泳池</facilities>
+  </hotel>
+  <hotel id="H1110">
+    <name>亚朵(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1661.56</price_per_night>
+    <rating>3.8</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa,早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1111">
+    <name>如家(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1847.24</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1112">
+    <name>全季(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>144.4</price_per_night>
+    <rating>4.7</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1113">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>653.84</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>餐厅,游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1114">
+    <name>亚朵(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>961.32</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>游泳池,WiFi,停车场</facilities>
+  </hotel>
+  <hotel id="H1115">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1392.26</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>Spa,健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1116">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1961.52</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1117">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1283.9</price_per_night>
+    <rating>4.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐,游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1118">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>780.41</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1119">
+    <name>凯悦(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1079.17</price_per_night>
+    <rating>4.8</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>健身房,Spa,游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1120">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1986.45</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1121">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>380.85</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>停车场,WiFi,早餐,健身房</facilities>
+  </hotel>
+  <hotel id="H1122">
+    <name>凯悦(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1303.16</price_per_night>
+    <rating>1.9</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1123">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>939.79</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1124">
+    <name>亚朵(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>365.78</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1125">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>4.9</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>早餐,餐厅</facilities>
+  </hotel>
+  <hotel id="H1126">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>4.4</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>餐厅,健身房,游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1127">
+    <name>全季(上海)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night/>
+    <rating>2.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1128">
+    <name>万豪(成都)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>1480.8</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1129">
+    <name>亚朵(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1548.83</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1130">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>427.7</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐,停车场,游泳池</facilities>
+  </hotel>
+  <hotel id="H1131">
+    <name>全季(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1532.95</price_per_night>
+    <rating>1.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1132">
+    <name>7天(上海)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1322.0</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1133">
+    <name>如家(北京)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>814.08</price_per_night>
+    <rating>1.9</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa,健身房,WiFi,停车场</facilities>
+  </hotel>
+  <hotel id="H1134">
+    <name>凯悦(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>325.72</price_per_night>
+    <rating>3.5</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1135">
+    <name>万豪(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1898.7</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,停车场</facilities>
+  </hotel>
+  <hotel id="H1136">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1182.85</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池,停车场,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1137">
+    <name>希尔顿(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1426.31</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>停车场,Spa,健身房</facilities>
+  </hotel>
+  <hotel id="H1138">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1005.86</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,停车场,WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1139">
+    <name>洲际(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1206.1</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1140">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>297.55</price_per_night>
+    <rating>1.8</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1141">
+    <name>7天(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1742.1</price_per_night>
+    <rating>4.5</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1142">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>359.22</price_per_night>
+    <rating>4.7</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>Spa,游泳池</facilities>
+  </hotel>
+  <hotel id="H1143">
+    <name>全季(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>500.3</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1144">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>930.51</price_per_night>
+    <rating>5.5</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,健身房,游泳池,餐厅</facilities>
+  </hotel>
+  <hotel id="H1145">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1485.0</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1146">
+    <name>锦江之星(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>328.5</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1147">
+    <name>万豪(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>1.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1148">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1874.95</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,停车场,餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1149">
+    <name>全季(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>757.51</price_per_night>
+    <rating>5.3</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>停车场,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1150">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1184.29</price_per_night>
+    <rating>4.2</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>停车场,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1151">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1006.29</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1152">
+    <name>全季(三亚)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>1426.08</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1153">
+    <name>锦江之星(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>599.41</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>游泳池,早餐,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1154">
+    <name>7天(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>333.47</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,健身房,WiFi,停车场</facilities>
+  </hotel>
+  <hotel id="H1155">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1798.62</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1156">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>620.81</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,游泳池,停车场,健身房</facilities>
+  </hotel>
+  <hotel id="H1157">
+    <name>汉庭(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>435.18</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>停车场,健身房,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1158">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1277.38</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa,餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1159">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>288.12</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1160">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1714.89</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>游泳池,健身房,WiFi,停车场</facilities>
+  </hotel>
+  <hotel id="H1161">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1727.47</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1162">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night/>
+    <rating>5.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1163">
+    <name>锦江之星(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1025.21</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1164">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>572.88</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,餐厅,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1165">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>884.37</price_per_night>
+    <rating>5.2</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>停车场,游泳池</facilities>
+  </hotel>
+  <hotel id="H1166">
+    <name>如家(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1193.01</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1167">
+    <name>亚朵(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>115.08</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅,Spa,游泳池,健身房</facilities>
+  </hotel>
+  <hotel id="H1168">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1819.97</price_per_night>
+    <rating>4.8</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1169">
+    <name>7天(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>107.45</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池,WiFi,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1170">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1986.13</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅,健身房</facilities>
+  </hotel>
+  <hotel id="H1171">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1436.46</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池,餐厅,停车场,健身房</facilities>
+  </hotel>
+  <hotel id="H1172">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1543.57</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,早餐,餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1173">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>929.55</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1174">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1578.57</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1175">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1022.7</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1176">
+    <name>7天(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1351.67</price_per_night>
+    <rating>5.2</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>健身房,餐厅,停车场,游泳池</facilities>
+  </hotel>
+  <hotel id="H1177">
+    <name>万豪(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1415.76</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1178">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1875.46</price_per_night>
+    <rating>4.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1179">
+    <name>锦江之星(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>839.74</price_per_night>
+    <rating>5.2</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>游泳池,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1180">
+    <name>全季(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1254.56</price_per_night>
+    <rating>4.6</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>早餐,餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1181">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>454.44</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1182">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>128.84</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐,停车场,餐厅</facilities>
+  </hotel>
+  <hotel id="H1183">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1858.58</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>停车场,早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1184">
+    <name>如家(杭州)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>1860.16</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1185">
+    <name>如家(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>463.81</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1186">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1749.49</price_per_night>
+    <rating>1.9</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池,停车场,Spa,早餐</facilities>
+  </hotel>
+  <hotel id="H1187">
+    <name>锦江之星(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>108.29</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1188">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1475.52</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1189">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>729.92</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1190">
+    <name>全季(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1184.73</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1191">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1114.42</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa,健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1192">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>784.07</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa,餐厅,WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1193">
+    <name>7天(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1110.96</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1194">
+    <name>如家(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>453.47</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,游泳池,早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1195">
+    <name>亚朵(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>698.51</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1196">
+    <name>汉庭(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1221.73</price_per_night>
+    <rating>5.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,WiFi,餐厅,健身房</facilities>
+  </hotel>
+  <hotel id="H1197">
+    <name>亚朵(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1840.06</price_per_night>
+    <rating>4.8</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,餐厅,游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1198">
+    <name>万豪(上海)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>978.4</price_per_night>
+    <rating>3.5</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>餐厅,停车场,健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1199">
+    <name>凯悦(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>914.71</price_per_night>
+    <rating>3.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1200">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1613.26</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1201">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>317.05</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,停车场,Spa,WiFi</facilities>
+  </hotel>
+  <hotel id="H1202">
+    <name>全季(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>700.48</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,早餐,游泳池,健身房</facilities>
+  </hotel>
+  <hotel id="H1203">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>888.98</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>Spa,早餐,停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1204">
+    <name>凯悦(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>345.19</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,游泳池</facilities>
+  </hotel>
+  <hotel id="H1205">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1727.62</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1206">
+    <name>锦江之星(成都)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1639.81</price_per_night>
+    <rating>1.9</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>早餐,停车场,健身房</facilities>
+  </hotel>
+  <hotel id="H1207">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1934.53</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场,健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1208">
+    <name>全季(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1834.59</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,游泳池,WiFi,餐厅</facilities>
+  </hotel>
+  <hotel id="H1209">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>912.76</price_per_night>
+    <rating>4.3</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>早餐,游泳池,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1210">
+    <name>凯悦(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>593.55</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,餐厅,停车场</facilities>
+  </hotel>
+  <hotel id="H1211">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>2.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1212">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>215.0</price_per_night>
+    <rating>4.5</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>健身房,餐厅,停车场</facilities>
+  </hotel>
+  <hotel id="H1213">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>421.81</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1214">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>4.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1215">
+    <name>万豪(成都)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>473.18</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,Spa,早餐</facilities>
+  </hotel>
+  <hotel id="H1216">
+    <name>万豪(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1303.15</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐,游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1217">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1013.7</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>停车场,健身房</facilities>
+  </hotel>
+  <hotel id="H1218">
+    <name>全季(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night/>
+    <rating>2.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池,早餐,健身房</facilities>
+  </hotel>
+  <hotel id="H1219">
+    <name>汉庭(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1532.67</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,游泳池,早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1220">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1414.75</price_per_night>
+    <rating>5.3</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>健身房,Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1221">
+    <name>凯悦(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1231.99</price_per_night>
+    <rating>5.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,WiFi,餐厅</facilities>
+  </hotel>
+  <hotel id="H1222">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>856.92</price_per_night>
+    <rating>1.8</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa,健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1223">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>780.93</price_per_night>
+    <rating>2.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,Spa,早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1224">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>714.32</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,Spa,餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1225">
+    <name>如家(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1765.37</price_per_night>
+    <rating>4.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,Spa,健身房,早餐</facilities>
+  </hotel>
+  <hotel id="H1226">
+    <name>亚朵(北京)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>411.99</price_per_night>
+    <rating>4.5</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi,游泳池,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1227">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1262.17</price_per_night>
+    <rating>4.9</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>早餐,停车场,游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1228">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>432.3</price_per_night>
+    <rating>4.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,WiFi</facilities>
+  </hotel>
+  <hotel id="H1229">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>697.74</price_per_night>
+    <rating>3.5</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1230">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1257.97</price_per_night>
+    <rating>3.8</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>停车场,WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1231">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>501.81</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1232">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night/>
+    <rating>2.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1233">
+    <name>7天(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1900.91</price_per_night>
+    <rating>1.9</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,餐厅,早餐,健身房</facilities>
+  </hotel>
+  <hotel id="H1234">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>310.84</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1235">
+    <name>7天(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1614.43</price_per_night>
+    <rating>1.8</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>Spa,WiFi</facilities>
+  </hotel>
+  <hotel id="H1236">
+    <name>7天(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>890.4</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1237">
+    <name>汉庭(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>152.76</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1238">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>872.63</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1239">
+    <name>汉庭(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>514.5</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>健身房,停车场,Spa</facilities>
+  </hotel>
+  <hotel id="H1240">
+    <name>亚朵(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>849.64</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1241">
+    <name>汉庭(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>466.38</price_per_night>
+    <rating>4.2</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>停车场,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1242">
+    <name>汉庭(北京)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>514.22</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>早餐,健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1243">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1914.36</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>早餐,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1244">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>354.87</price_per_night>
+    <rating>3.5</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池,WiFi,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1245">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>958.58</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,健身房</facilities>
+  </hotel>
+  <hotel id="H1246">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1837.23</price_per_night>
+    <rating>3.8</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1247">
+    <name>希尔顿(上海)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>1337.33</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1248">
+    <name>凯悦(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1901.08</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,Spa,早餐</facilities>
+  </hotel>
+  <hotel id="H1249">
+    <name>万豪(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1885.51</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,餐厅,Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1250">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>553.65</price_per_night>
+    <rating>4.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐,餐厅,游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1251">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>367.97</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐,WiFi</facilities>
+  </hotel>
+  <hotel id="H1252">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1968.31</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1253">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>508.34</price_per_night>
+    <rating>1.0</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1254">
+    <name>7天(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1921.08</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>停车场,Spa</facilities>
+  </hotel>
+  <hotel id="H1255">
+    <name>汉庭(三亚)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1106.44</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1256">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1824.06</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1257">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>589.62</price_per_night>
+    <rating>3.7</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,餐厅,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1258">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1980.94</price_per_night>
+    <rating>4.9</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa,WiFi,游泳池</facilities>
+  </hotel>
+  <hotel id="H1259">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>638.09</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>健身房,WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1260">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>688.3</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>早餐,游泳池,Spa,WiFi</facilities>
+  </hotel>
+  <hotel id="H1261">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>919.34</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,健身房,Spa,游泳池</facilities>
+  </hotel>
+  <hotel id="H1262">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>239.64</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,早餐,游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1263">
+    <name>7天(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1113.36</price_per_night>
+    <rating>5.3</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池,餐厅,停车场</facilities>
+  </hotel>
+  <hotel id="H1264">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>883.82</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>早餐,健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1265">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1761.2</price_per_night>
+    <rating>3.5</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅,停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1266">
+    <name>汉庭(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1179.0</price_per_night>
+    <rating>4.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1267">
+    <name>希尔顿(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>485.66</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1268">
+    <name>锦江之星(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1720.62</price_per_night>
+    <rating>4.7</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>餐厅,停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1269">
+    <name>7天(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>569.08</price_per_night>
+    <rating>4.5</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>游泳池,健身房</facilities>
+  </hotel>
+  <hotel id="H1270">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>690.16</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,游泳池,早餐</facilities>
+  </hotel>
+  <hotel id="H1271">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1566.59</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>Spa,餐厅</facilities>
+  </hotel>
+  <hotel id="H1272">
+    <name>全季(三亚)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1247.7</price_per_night>
+    <rating>5.2</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,健身房,餐厅,停车场</facilities>
+  </hotel>
+  <hotel id="H1273">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>686.35</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,停车场</facilities>
+  </hotel>
+  <hotel id="H1274">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night/>
+    <rating>4.9</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,WiFi,停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1275">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1562.26</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>餐厅,健身房,Spa,WiFi</facilities>
+  </hotel>
+  <hotel id="H1276">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1803.85</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,WiFi</facilities>
+  </hotel>
+  <hotel id="H1277">
+    <name>汉庭(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night/>
+    <rating>5.4</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池,健身房,Spa,餐厅</facilities>
+  </hotel>
+  <hotel id="H1278">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1827.74</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1279">
+    <name>汉庭(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1236.3</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1280">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>1</stars>
+    <price_per_night>1435.02</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1281">
+    <name>锦江之星(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1561.69</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1282">
+    <name>汉庭(上海)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>1362.44</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,WiFi,停车场</facilities>
+  </hotel>
+  <hotel id="H1283">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>498.3</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>餐厅,早餐,健身房</facilities>
+  </hotel>
+  <hotel id="H1284">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night/>
+    <rating>3.7</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,早餐,游泳池,健身房</facilities>
+  </hotel>
+  <hotel id="H1285">
+    <name>万豪(杭州)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1992.58</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1286">
+    <name>希尔顿(三亚)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>811.88</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,早餐,餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1287">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1359.18</price_per_night>
+    <rating>2.3</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>WiFi,早餐,游泳池,餐厅</facilities>
+  </hotel>
+  <hotel id="H1288">
+    <name>7天(上海)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>793.13</price_per_night>
+    <rating>4.6</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1289">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>3.5</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1290">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>318.45</price_per_night>
+    <rating>3.7</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1291">
+    <name>万豪(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1217.7</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池,餐厅,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1292">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1065.22</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1293">
+    <name>希尔顿(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>4.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,游泳池,早餐</facilities>
+  </hotel>
+  <hotel id="H1294">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>209.31</price_per_night>
+    <rating>2.3</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1295">
+    <name>7天(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>848.53</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1296">
+    <name>洲际(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>5.0</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1297">
+    <name>汉庭(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>1.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1298">
+    <name>万豪(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>732.88</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1299">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>277.01</price_per_night>
+    <rating>3.2</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1300">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>395.6</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1301">
+    <name>全季(北京)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1580.53</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1302">
+    <name>7天(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>639.5</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1303">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>579.92</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,Spa,停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1304">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>919.91</price_per_night>
+    <rating>5.3</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,早餐,健身房</facilities>
+  </hotel>
+  <hotel id="H1305">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>2.0</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1306">
+    <name>万豪(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>989.76</price_per_night>
+    <rating>3.5</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>游泳池,Spa</facilities>
+  </hotel>
+  <hotel id="H1307">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1596.77</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1308">
+    <name>锦江之星(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1996.06</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1309">
+    <name>汉庭(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1927.74</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>Spa,健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1310">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>964.14</price_per_night>
+    <rating>4.7</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1311">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>135.76</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1312">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1728.52</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池,Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1313">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>389.36</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1314">
+    <name>凯悦(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1101.65</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池,早餐,餐厅</facilities>
+  </hotel>
+  <hotel id="H1315">
+    <name>希尔顿(三亚)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>147.89</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1316">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>482.19</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>停车场,餐厅</facilities>
+  </hotel>
+  <hotel id="H1317">
+    <name>全季(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1901.91</price_per_night>
+    <rating>1.0</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>Spa,停车场,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1318">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1672.25</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1319">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1590.25</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>停车场,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1320">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>619.83</price_per_night>
+    <rating>4.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1321">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>850.95</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1322">
+    <name>凯悦(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1300.34</price_per_night>
+    <rating>2.7</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1323">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1078.47</price_per_night>
+    <rating>1.2</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1324">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>964.22</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房</facilities>
+  </hotel>
+  <hotel id="H1325">
+    <name>锦江之星(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>130.4</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>游泳池,健身房,早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1326">
+    <name>亚朵(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1312.86</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>停车场,餐厅</facilities>
+  </hotel>
+  <hotel id="H1327">
+    <name>如家(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1566.54</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>WiFi,停车场,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1328">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1417.47</price_per_night>
+    <rating>3.1</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>Spa,WiFi,游泳池</facilities>
+  </hotel>
+  <hotel id="H1329">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1981.67</price_per_night>
+    <rating>2.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1330">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>752.86</price_per_night>
+    <rating>4.2</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅,健身房</facilities>
+  </hotel>
+  <hotel id="H1331">
+    <name>7天(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1597.73</price_per_night>
+    <rating>5.2</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>游泳池,停车场</facilities>
+  </hotel>
+  <hotel id="H1332">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1430.32</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>Spa,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1333">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1171.13</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1334">
+    <name>7天(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1873.83</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1335">
+    <name>亚朵(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>681.34</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>游泳池,早餐</facilities>
+  </hotel>
+  <hotel id="H1336">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>710.91</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>早餐,停车场,WiFi</facilities>
+  </hotel>
+  <hotel id="H1337">
+    <name>7天(成都)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1743.92</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,游泳池</facilities>
+  </hotel>
+  <hotel id="H1338">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>751.77</price_per_night>
+    <rating>4.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1339">
+    <name>万豪(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1398.39</price_per_night>
+    <rating>1.9</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1340">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>1899.0</price_per_night>
+    <rating>4.5</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>健身房,Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1341">
+    <name>7天(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>437.5</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>停车场,Spa,游泳池</facilities>
+  </hotel>
+  <hotel id="H1342">
+    <name>亚朵(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1321.3</price_per_night>
+    <rating>3.7</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>健身房,停车场,WiFi,餐厅</facilities>
+  </hotel>
+  <hotel id="H1343">
+    <name>汉庭(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1926.2</price_per_night>
+    <rating>1.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,早餐,健身房,游泳池</facilities>
+  </hotel>
+  <hotel id="H1344">
+    <name>锦江之星(上海)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>3.3</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi,早餐</facilities>
+  </hotel>
+  <hotel id="H1345">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1679.06</price_per_night>
+    <rating>2.2</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>健身房,WiFi,游泳池,餐厅</facilities>
+  </hotel>
+  <hotel id="H1346">
+    <name>如家(上海)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>391.88</price_per_night>
+    <rating>4.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,停车场,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1347">
+    <name>亚朵(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1618.19</price_per_night>
+    <rating>3.2</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,餐厅,WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1348">
+    <name>凯悦(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1790.89</price_per_night>
+    <rating>2.5</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>餐厅,WiFi,健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1349">
+    <name>亚朵(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>253.24</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1350">
+    <name>汉庭(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>719.25</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>餐厅,早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1351">
+    <name>亚朵(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1377.87</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>Spa,停车场,游泳池,早餐</facilities>
+  </hotel>
+  <hotel id="H1352">
+    <name>全季(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night/>
+    <rating>3.6</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1353">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>1046.74</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1354">
+    <name>万豪(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1946.92</price_per_night>
+    <rating>4.1</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>停车场,早餐,WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1355">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1750.49</price_per_night>
+    <rating>1.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1356">
+    <name>希尔顿(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1566.27</price_per_night>
+    <rating>3.0</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>停车场,餐厅</facilities>
+  </hotel>
+  <hotel id="H1357">
+    <name>汉庭(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1296.8</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1358">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>213.35</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1359">
+    <name>汉庭(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1240.3</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,早餐</facilities>
+  </hotel>
+  <hotel id="H1360">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night/>
+    <rating>3.5</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1361">
+    <name>洲际(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>911.98</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>0</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1362">
+    <name>汉庭(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1724.7</price_per_night>
+    <rating>3.2</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1363">
+    <name>希尔顿(成都)</name>
+    <city/>
+    <stars>2</stars>
+    <price_per_night>1652.53</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,健身房</facilities>
+  </hotel>
+  <hotel id="H1364">
+    <name>汉庭(成都)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1782.5</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>WiFi,早餐,游泳池</facilities>
+  </hotel>
+  <hotel id="H1365">
+    <name>如家(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1732.62</price_per_night>
+    <rating>4.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,健身房,早餐,停车场</facilities>
+  </hotel>
+  <hotel id="H1366">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1756.52</price_per_night>
+    <rating>2.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场,早餐</facilities>
+  </hotel>
+  <hotel id="H1367">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night/>
+    <rating>3.2</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1368">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>1798.32</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,停车场,健身房</facilities>
+  </hotel>
+  <hotel id="H1369">
+    <name>7天(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1865.83</price_per_night>
+    <rating>4.0</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>停车场,游泳池,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1370">
+    <name>锦江之星(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1492.89</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>停车场,游泳池</facilities>
+  </hotel>
+  <hotel id="H1371">
+    <name>洲际(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>264.44</price_per_night>
+    <rating>1.4</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1372">
+    <name>希尔顿(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>879.27</price_per_night>
+    <rating>1.6</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>游泳池</facilities>
+  </hotel>
+  <hotel id="H1373">
+    <name>全季(深圳)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1533.86</price_per_night>
+    <rating>4.8</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa,早餐</facilities>
+  </hotel>
+  <hotel id="H1374">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1893.11</price_per_night>
+    <rating>5.0</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>WiFi,Spa</facilities>
+  </hotel>
+  <hotel id="H1375">
+    <name>亚朵(成都)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1743.31</price_per_night>
+    <rating>2.6</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1376">
+    <name>7天(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1861.26</price_per_night>
+    <rating>2.0</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,餐厅</facilities>
+  </hotel>
+  <hotel id="H1377">
+    <name>万豪(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1329.24</price_per_night>
+    <rating>5.2</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>早餐</facilities>
+  </hotel>
+  <hotel id="H1378">
+    <name>如家(杭州)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1246.31</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>健身房,Spa,餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1379">
+    <name>全季(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1059.36</price_per_night>
+    <rating>5.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>Spa</facilities>
+  </hotel>
+  <hotel id="H1380">
+    <name>亚朵(北京)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1973.25</price_per_night>
+    <rating>1.3</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>健身房,Spa</facilities>
+  </hotel>
+  <hotel id="H1381">
+    <name>洲际(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>950.53</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅</facilities>
+  </hotel>
+  <hotel id="H1382">
+    <name>凯悦(深圳)</name>
+    <city/>
+    <stars>6</stars>
+    <price_per_night>1759.79</price_per_night>
+    <rating>4.5</rating>
+    <rooms_available>1</rooms_available>
+    <facilities>Spa,健身房</facilities>
+  </hotel>
+  <hotel id="H1383">
+    <name>锦江之星(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1931.21</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>20</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1384">
+    <name>万豪(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1978.0</price_per_night>
+    <rating>3.3</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>停车场,Spa</facilities>
+  </hotel>
+  <hotel id="H1385">
+    <name>洲际(北京)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1725.21</price_per_night>
+    <rating>1.1</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>健身房,游泳池,餐厅,Spa</facilities>
+  </hotel>
+  <hotel id="H1386">
+    <name>亚朵(成都)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>878.24</price_per_night>
+    <rating>4.8</rating>
+    <rooms_available>-1</rooms_available>
+    <facilities>停车场,餐厅</facilities>
+  </hotel>
+  <hotel id="H1387">
+    <name>洲际(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1045.43</price_per_night>
+    <rating>2.3</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>WiFi</facilities>
+  </hotel>
+  <hotel id="H1388">
+    <name>希尔顿(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night/>
+    <rating>4.2</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>餐厅,健身房</facilities>
+  </hotel>
+  <hotel id="H1389">
+    <name>如家(成都)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>137.26</price_per_night>
+    <rating>3.6</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1390">
+    <name>凯悦(杭州)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>455.56</price_per_night>
+    <rating>2.3</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>停车场</facilities>
+  </hotel>
+  <hotel id="H1391">
+    <name>希尔顿(上海)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>503.88</price_per_night>
+    <rating>2.9</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>餐厅,停车场,早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1392">
+    <name>亚朵(成都)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1633.52</price_per_night>
+    <rating>3.2</rating>
+    <rooms_available>50</rooms_available>
+    <facilities>游泳池,健身房,停车场</facilities>
+  </hotel>
+  <hotel id="H1393">
+    <name>万豪(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1438.45</price_per_night>
+    <rating>4.7</rating>
+    <rooms_available>10</rooms_available>
+    <facilities>餐厅,WiFi</facilities>
+  </hotel>
+  <hotel id="H1394">
+    <name>凯悦(三亚)</name>
+    <city/>
+    <stars>4</stars>
+    <price_per_night>1613.23</price_per_night>
+    <rating>5.1</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>WiFi,餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1395">
+    <name>万豪(杭州)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1111.82</price_per_night>
+    <rating>4.9</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>游泳池,WiFi</facilities>
+  </hotel>
+  <hotel id="H1396">
+    <name>亚朵(深圳)</name>
+    <city/>
+    <stars>0</stars>
+    <price_per_night>1880.64</price_per_night>
+    <rating>1.7</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>早餐,Spa</facilities>
+  </hotel>
+  <hotel id="H1397">
+    <name>希尔顿(深圳)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1663.69</price_per_night>
+    <rating>3.2</rating>
+    <rooms_available>100</rooms_available>
+    <facilities>停车场,健身房,餐厅,早餐</facilities>
+  </hotel>
+  <hotel id="H1398">
+    <name>如家(深圳)</name>
+    <city/>
+    <stars>3</stars>
+    <price_per_night>862.1</price_per_night>
+    <rating>3.9</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,WiFi,Spa,停车场</facilities>
+  </hotel>
+  <hotel id="H1399">
+    <name>7天(三亚)</name>
+    <city/>
+    <stars>5</stars>
+    <price_per_night>1214.6</price_per_night>
+    <rating>3.4</rating>
+    <rooms_available>5</rooms_available>
+    <facilities>游泳池,WiFi</facilities>
+  </hotel>
+</hotels>
