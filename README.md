@@ -83,6 +83,19 @@ Phase 5: 语义输出          summary, score, insights, recommendations
 | `actions_taken` | list[str] | 具体操作记录 |
 | `recommendations` | list[str] | 后续建议 |
 
+## 三层 API
+
+```python
+# 第一层：管道（只做清洗，不写文件）
+cleaned_df, audit = cleaner.execute("data.csv", schema_rules={...})
+
+# 第二层：数据产品包构建（纯内存，零 I/O）
+bundle = cleaner.build_artifacts(cleaned_df, audit, source_stem="data")
+
+# 第三层：落盘存储
+artifacts = cleaner.save_artifacts(bundle, output_dir="cleaned_data/")
+```
+
 ## 支持格式
 
 15 种扩展名 / 11 种格式：`.csv` `.tsv` `.xlsx` `.xls` `.json` `.parquet` `.feather` `.html` `.htm` `.xml` `.yaml` `.yml` `.db` `.sqlite` `.sqlite3` `.pkl` `.pickle`

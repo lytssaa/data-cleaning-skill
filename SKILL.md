@@ -353,9 +353,26 @@ print(f"Quality: {so['data_quality_score']}/100")
 5. **Business rules before statistics.** Logical errors (height=0) handled by replace_values; statistical outliers handled by IQR.
 6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
 7. **Semantic separation.** invalid/suspicious (semantic layer) vs sentinel (missing layer) — different concepts, different processing paths.
-8. **AI-native output.** Every execution returns a `semantic_output` with summary, score, insights, and recommendations — not just raw audit JSON.
-6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
-6. **NEVER use outlier_method="none" as a blanket default.** Every numeric column must be evaluated individually for its distribution type.
+8. **AI-native output.** Every execution returns a `semantic_output` with summary, score, insights, and recommendations.
+9. **Missing layer is type-aware.** Categorical fills with mode (not "Unknown"); numeric fills with rounded median.
+10. **Three-layer architecture.** `execute()` returns data; `build_artifacts()` builds bundle in memory; `save_artifacts()` writes to disk.
+11. **Missing layer is type-aware.** Categorical fills with mode (not "Unknown"); numeric fills with rounded median; ghost NaN regex excludes Chinese words.
+
+## Three-Layer API
+
+```python
+# Layer 1: Pipeline (skill logic only, no I/O)
+cleaned_df, audit = cleaner.execute("data.csv", schema_rules={...})
+
+# Layer 2: Artifact Builder (pure data, no disk writes)
+bundle = cleaner.build_artifacts(cleaned_df, audit, source_stem="data")
+
+# Layer 3: Storage (writes to disk)
+artifacts = cleaner.save_artifacts(bundle, output_dir="cleaned_data/")
+
+# Legacy (calls build + save internally)
+cleaner._save_cleaned_output(subdir, stem, cleaned_df, audit)
+```
 
 ## Bundled Scripts
 
