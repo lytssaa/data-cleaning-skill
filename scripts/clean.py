@@ -4,7 +4,7 @@ Industrial-Grade Data Cleaning Pipeline — DataPipelineCleaner
 
 Architecture (strict one-way dataflow):
   _safe_ingest → _standardize_columns_and_text → _type_alignment
-  → _missing_value_trial → _outlier_suppression → execute()
+  → _semantic_tagging → _decision_engine → _missing_value_trial → _outlier_suppression → execute()
 
 Philosophy:
   - Never silently drop data. Every deletion must appear in the audit trail.
@@ -155,15 +155,19 @@ class DataPipelineCleaner:
         business_rules: dict[str, dict[str, Any]] | None = None,
         expand_nested: bool = False,
         expected_min_rows: int | None = None,
+        semantic_rules: dict[str, dict[str, Any]] | None = None,
+        outlier_rules: dict[str, dict[str, Any]] | None = None,
     ) -> tuple[pd.DataFrame, dict[str, Any]]:
-        """Run the full five-phase pipeline and return cleaned data + audit.
+        """Run the full seven-phase pipeline and return cleaned data + audit.
 
-        This is the **only** public entry point.  All six phases execute in a
+        This is the **only** public entry point.  All seven phases execute in a
         fixed, unidirectional order:
 
             0. Safe ingest (all-string, zero type inference)
             1. Column-name / text-value standardisation (snake_case, NFKC, ghost-char removal)
             2. Type coercion per *schema_rules* with ``errors='coerce'``
+            2.3. Semantic tagging (tag cells as invalid/suspicious/sentinel — no data modification)
+            2.4. Decision engine (apply semantic decisions + legacy replace_values)
             3. Missing-value trial (column/row pruning + imputation)
             4. Outlier suppression (multi-strategy, never deletion)
             5. Audit report assembly
@@ -191,6 +195,16 @@ class DataPipelineCleaner:
                 columns.  Set to a list of column names for explicit control.
             expected_min_rows: If set and actual rows are fewer, emit a
                 warning (useful for YAML/JSON that may be truncated).
+            semantic_rules: Per-column semantic value rules. Each key is a
+                column name, value is a dict with optional keys:
+                ``invalid`` (list of values → NaN), ``suspicious`` (list of
+                values → kept but flagged), ``sentinel`` (list of values → NaN).
+                Example: ``{"age": {"invalid": [-5, -1], "suspicious": [150]}}``.
+            outlier_rules: Per-column outlier suppression overrides. Each key
+                is a column name, value is a dict with ``method`` (``"iqr"``,
+                ``"percentile"``, ``"zscore"``, ``"none"``) and optional
+                ``threshold`` / ``zscore_threshold`` / ``iqr_k``.
+                Example: ``{"income": {"method": "percentile", "threshold": 0.995}}``.
 
         Returns:
             A 2-tuple of ``(cleaned_df, audit_report)``.
@@ -209,6 +223,9 @@ class DataPipelineCleaner:
             "per_column": {},
             "stage_timings": {},
             "warnings": [],
+            "semantic_audit": {"total_cells_tagged": 0, "by_type": {"invalid": 0, "suspicious": 0, "sentinel": 0}},
+            "cell_actions": [],
+            "outlier_rules_applied": {},
         }
 
         t0 = datetime.now()
@@ -269,14 +286,28 @@ class DataPipelineCleaner:
         self._audit["stage_timings"]["type_alignment"] = _elapsed(t0)
         self._audit["per_column"]["schema_rules_applied"] = translated_rules
 
+        # Phase 2.3: Semantic tagging (tag only, no data modification)
+        tag_audit = {}
+        if semantic_rules:
+            tag_audit = self._semantic_tagging(df, semantic_rules)
+            self._audit["stage_timings"]["semantic_tagging"] = _elapsed(t0)
+
+        # Phase 2.4: Decision engine (apply semantic decisions + legacy replace_values)
+        cell_actions = []
+        if semantic_rules or business_rules:
+            df, cell_actions = self._decision_engine(df, semantic_rules, business_rules)
+            self._audit["stage_timings"]["decision_engine"] = _elapsed(t0)
+        self._audit["cell_actions"] = cell_actions
+
         # Phase 3: Missing-value trial
         df = self._missing_value_trial(df, business_rules=business_rules)
         self._audit["stage_timings"]["missing_trial"] = _elapsed(t0)
 
-        # Phase 4: Outlier suppression
+        # Phase 4: Outlier suppression (now with per-column methods)
         df = self._outlier_suppression(
             df, iqr_k=iqr_k, method=outlier_method,
             threshold=outlier_threshold, zscore_threshold=zscore_threshold,
+            outlier_rules=outlier_rules,
         )
         self._audit["stage_timings"]["outlier_suppression"] = _elapsed(t0)
 
@@ -327,6 +358,7 @@ class DataPipelineCleaner:
         self._audit["retention_rate_pct"] = (
             round(cleaned / original * 100, 2) if original > 0 else 0.0
         )
+        self._audit["semantic_audit"] = tag_audit if tag_audit else self._audit["semantic_audit"]
         self._audit["finished_at"] = datetime.now().isoformat(timespec="seconds")
 
         # ── Store expanded/sheet DataFrames for programmatic access ─────
@@ -1055,6 +1087,145 @@ class DataPipelineCleaner:
         return df
 
     # ========================================================================
+    # Phase 2.3 — Semantic Tagging
+    # ========================================================================
+
+    def _semantic_tagging(
+        self,
+        df: pd.DataFrame,
+        semantic_rules: dict[str, dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Tag cells as invalid/suspicious/sentinel without modifying data.
+
+        For each column with semantic_rules, creates a ``{col}_tags`` column
+        with per-cell tags.  Does NOT modify the original data values.
+
+        Args:
+            df: DataFrame after type alignment (Phase 2).
+            semantic_rules: ``{col: {"invalid": [...], "suspicious": [...], "sentinel": [...]}}``.
+
+        Returns:
+            Tag audit: ``{"col": {"invalid": N, "suspicious": N, "sentinel": N}}``.
+        """
+        tag_audit: dict[str, dict[str, int]] = {}
+        total_tagged = 0
+        by_type = {"invalid": 0, "suspicious": 0, "sentinel": 0}
+
+        for col, rules in semantic_rules.items():
+            if col not in df.columns:
+                continue
+
+            col_audit = {"invalid": 0, "suspicious": 0, "sentinel": 0}
+            tags = pd.Series(None, index=df.index, dtype="string")
+
+            for tag_type in ("invalid", "suspicious", "sentinel"):
+                values = rules.get(tag_type, [])
+                if not values:
+                    continue
+                try:
+                    numeric_vals = pd.to_numeric(df[col], errors="coerce")
+                    mask = numeric_vals.isin(values)
+                except Exception:
+                    mask = df[col].astype(str).isin([str(v) for v in values])
+                count = int(mask.sum())
+                if count > 0:
+                    tags[mask] = tag_type
+                    col_audit[tag_type] = count
+                    by_type[tag_type] += count
+                    total_tagged += count
+
+            if any(v > 0 for v in col_audit.values()):
+                df[f"{col}_tags"] = tags
+                tag_audit[col] = col_audit
+
+        return {"total_cells_tagged": total_tagged, "by_type": by_type, "details": tag_audit}
+
+    # ========================================================================
+    # Phase 2.4 — Decision Engine
+    # ========================================================================
+
+    def _decision_engine(
+        self,
+        df: pd.DataFrame,
+        semantic_rules: dict[str, dict[str, Any]] | None,
+        business_rules: dict[str, dict[str, Any]] | None,
+    ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
+        """Apply semantic decisions and legacy replace_values.
+
+        For each column with semantic_rules:
+          - 'invalid' cells → convert to NaN
+          - 'sentinel' cells → convert to NaN
+          - 'suspicious' cells → KEEP the value, but flag in audit
+
+        Then handles legacy ``replace_values`` from business_rules (backward compat).
+        Drops tag columns after processing.
+
+        Returns:
+            ``(df, cell_actions)`` where cell_actions is a list of dicts
+            describing each cell action taken.
+        """
+        df = df.copy()
+        cell_actions: list[dict[str, Any]] = []
+
+        # Process semantic_rules
+        if semantic_rules:
+            for col, rules in semantic_rules.items():
+                if col not in df.columns:
+                    continue
+
+                for tag_type in ("invalid", "sentinel"):
+                    values = rules.get(tag_type, [])
+                    if not values:
+                        continue
+                    try:
+                        numeric_vals = pd.to_numeric(df[col], errors="coerce")
+                        mask = numeric_vals.isin(values)
+                    except Exception:
+                        mask = df[col].astype(str).isin([str(v) for v in values])
+
+                    matched_indices = df.index[mask]
+                    for idx in matched_indices:
+                        original_val = df.at[idx, col]
+                        cell_actions.append({
+                            "row": int(idx),
+                            "col": col,
+                            "original": _safe_py(original_val) if pd.api.types.is_numeric_dtype(df[col]) else str(original_val),
+                            "action": f"{tag_type}_to_nan",
+                            "rule": f"{col}.{tag_type}",
+                        })
+                    df.loc[mask, col] = pd.NA
+
+        # Handle legacy replace_values from business_rules (backward compat)
+        brules = business_rules or {}
+        for col, rule in brules.items():
+            vals_to_replace = rule.get("replace_values")
+            if vals_to_replace is None or col not in df.columns:
+                continue
+            try:
+                numeric_col = pd.to_numeric(df[col], errors="coerce")
+                mask = numeric_col.isin(vals_to_replace)
+            except Exception:
+                continue
+            matched_indices = df.index[mask]
+            for idx in matched_indices:
+                original_val = df.at[idx, col]
+                cell_actions.append({
+                    "row": int(idx),
+                    "col": col,
+                    "original": _safe_py(original_val) if pd.api.types.is_numeric_dtype(df[col]) else str(original_val),
+                    "action": "replace_value_to_nan",
+                    "rule": f"{col}.replace_values",
+                })
+            df.loc[mask, col] = pd.NA
+
+        # Drop tag columns after processing
+        tag_cols = [c for c in df.columns if c.endswith("_tags")]
+        if tag_cols:
+            df.drop(columns=tag_cols, inplace=True)
+
+        return df, cell_actions
+
+    # ========================================================================
     # Phase 3 — Missing-Value Trial
     # ========================================================================
 
@@ -1263,6 +1434,7 @@ class DataPipelineCleaner:
         method: str = "iqr",
         threshold: float = 0.995,
         zscore_threshold: float = 3.0,
+        outlier_rules: dict[str, dict[str, Any]] | None = None,
     ) -> pd.DataFrame:
         """Suppress outliers using a configurable strategy.
 
@@ -1315,6 +1487,22 @@ class DataPipelineCleaner:
                 numeric_cols = auto_detected_cols
 
         for col in numeric_cols:
+            # Per-column method resolution: outlier_rules overrides global
+            col_method = method
+            col_threshold = threshold
+            col_zscore_threshold = zscore_threshold
+            col_iqr_k = iqr_k
+            if outlier_rules and col in outlier_rules:
+                col_rule = outlier_rules[col]
+                col_method = col_rule.get("method", method)
+                col_threshold = col_rule.get("threshold", threshold)
+                col_zscore_threshold = col_rule.get("zscore_threshold", zscore_threshold)
+                col_iqr_k = col_rule.get("iqr_k", iqr_k)
+                self._audit["outlier_rules_applied"][col] = {
+                    "method": col_method,
+                    "params": {k: v for k, v in col_rule.items()},
+                }
+
             # Handle auto-detected numeric columns (stored as strings)
             if col in auto_detected_cols:
                 # Convert to numeric for outlier detection
@@ -1331,8 +1519,8 @@ class DataPipelineCleaner:
             is_integer_col = pd.api.types.is_integer_dtype(df[col])
 
             # ── IQR method ────────────────────────────────────────────────
-            if method == "iqr":
-                k = iqr_k if iqr_k is not None else self.IQR_K
+            if col_method == "iqr":
+                k = col_iqr_k if col_iqr_k is not None else self.IQR_K
                 q1 = float(ser.quantile(0.25))
                 q3 = float(ser.quantile(0.75))
                 iqr_val = q3 - q1
@@ -1344,16 +1532,16 @@ class DataPipelineCleaner:
                 meta = {"k": k, "q1": round(q1, 4), "q3": round(q3, 4)}
 
             # ── Percentile method ─────────────────────────────────────────
-            elif method == "percentile":
-                lo_thresh = 1.0 - threshold
+            elif col_method == "percentile":
+                lo_thresh = 1.0 - col_threshold
                 lo = float(ser.quantile(lo_thresh))
-                hi = float(ser.quantile(threshold))
+                hi = float(ser.quantile(col_threshold))
                 if lo >= hi:
                     continue
-                method_label = f"percentile(thresh={threshold})"
-                meta = {"threshold": threshold,
+                method_label = f"percentile(thresh={col_threshold})"
+                meta = {"threshold": col_threshold,
                         "lo_quantile": round(lo_thresh, 4),
-                        "hi_quantile": round(threshold, 4)}
+                        "hi_quantile": round(col_threshold, 4)}
 
             # ── Z-score method ────────────────────────────────────────────
             else:  # zscore
@@ -1361,9 +1549,9 @@ class DataPipelineCleaner:
                 std_val = float(ser.std())
                 if std_val == 0:
                     continue
-                lo = mean_val - zscore_threshold * std_val
-                hi = mean_val + zscore_threshold * std_val
-                method_label = f"zscore(threshold={zscore_threshold})"
+                lo = mean_val - col_zscore_threshold * std_val
+                hi = mean_val + col_zscore_threshold * std_val
+                method_label = f"zscore(threshold={col_zscore_threshold})"
                 meta = {"mean": round(mean_val, 4),
                         "std": round(std_val, 4)}
 
