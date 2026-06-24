@@ -207,42 +207,9 @@ class DataPipelineCleaner:
         # ── Pre-compute column name mapping for schema_rules ───────────────
         # Phase 1 will rename columns.  We translate schema_rules keys now
         # so Phase 2 receives column names that actually exist.
-        original_cols = list(df.columns)
-        predicted_names = [
-            _standardize_col_name(c, lowercase=lowercase_columns)
-            for c in original_cols
-        ]
-        name_map: dict[str, str] = dict(zip(original_cols, predicted_names))
-        # Handle deduplication collisions (same logic as Phase 1)
-        seen: dict[str, int] = {}
-        deduped: list[str] = []
-        for name in predicted_names:
-            if name in seen:
-                seen[name] += 1
-                name = f"{name}_{seen[name]}"
-            else:
-                seen[name] = 0
-            deduped.append(name)
-        name_map = dict(zip(original_cols, deduped))
-        # Translate schema_rules to use standardised column names
-        translated_rules: dict[str, str] = {}
-        for col_key, target in schema_rules.items():
-            matched = name_map.get(col_key)
-            if matched is not None:
-                translated_rules[matched] = target
-            elif col_key in deduped:
-                translated_rules[col_key] = target
-            else:
-                # Try case-insensitive match as fallback
-                for orig, pred in name_map.items():
-                    if orig.lower() == col_key.lower():
-                        translated_rules[pred] = target
-                        break
-                else:
-                    self._audit["warnings"].append(
-                        f"schema_rules key '{col_key}' not found in "
-                        f"columns {list(name_map.keys())[:10]}..."
-                    )
+        translated_rules, name_map = self._translate_schema_rules(
+            df, schema_rules, lowercase_columns,
+        )
         self._audit["column_name_mapping"] = name_map
         # Record input/output format metadata
         self._audit["input"] = {
@@ -290,10 +257,14 @@ class DataPipelineCleaner:
         if raw_sheets:
             for sname, raw_df in raw_sheets.items():
                 try:
+                    # Compute schema mapping for THIS sheet's columns
+                    s_translated, _ = self._translate_schema_rules(
+                        raw_df, schema_rules, lowercase_columns,
+                    )
                     s_df = self._standardize_columns_and_text(
                         raw_df, lowercase=lowercase_columns
                     )
-                    s_df = self._type_alignment(s_df, translated_rules)
+                    s_df = self._type_alignment(s_df, s_translated)
                     s_df = self._missing_value_trial(
                         s_df, business_rules=business_rules
                     )
@@ -321,6 +292,62 @@ class DataPipelineCleaner:
         self._audit["_nested_dfs"] = nested_dfs
 
         return df, self._audit.copy()
+
+    # ========================================================================
+    # Schema Rules Translation (shared by main DF and multi-sheet processing)
+    # ========================================================================
+
+    def _translate_schema_rules(
+        self, df: pd.DataFrame, schema_rules: dict[str, str],
+        lowercase_columns: bool,
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        """Translate *schema_rules* keys to post-standardisation column names.
+
+        Phase 1 will rename columns.  We predict what each column name will
+        become, then map *schema_rules* keys to those predicted names so
+        Phase 2 receives column names that actually exist.
+
+        Returns:
+            ``(translated_rules, name_map)`` where *name_map* is
+            ``{original_col → predicted_col}``.
+        """
+        original_cols = list(df.columns)
+        predicted_names = [
+            _standardize_col_name(c, lowercase=lowercase_columns)
+            for c in original_cols
+        ]
+        name_map: dict[str, str] = dict(zip(original_cols, predicted_names))
+        # Handle deduplication collisions (same logic as Phase 1)
+        seen: dict[str, int] = {}
+        deduped: list[str] = []
+        for name in predicted_names:
+            if name in seen:
+                seen[name] += 1
+                name = f"{name}_{seen[name]}"
+            else:
+                seen[name] = 0
+            deduped.append(name)
+        name_map = dict(zip(original_cols, deduped))
+        # Translate schema_rules to use standardised column names
+        translated: dict[str, str] = {}
+        for col_key, target in schema_rules.items():
+            matched = name_map.get(col_key)
+            if matched is not None:
+                translated[matched] = target
+            elif col_key in deduped:
+                translated[col_key] = target
+            else:
+                # Try case-insensitive match as fallback
+                for orig, pred in name_map.items():
+                    if orig.lower() == col_key.lower():
+                        translated[pred] = target
+                        break
+                else:
+                    self._audit["warnings"].append(
+                        f"schema_rules key '{col_key}' not found in "
+                        f"columns {list(name_map.keys())[:10]}..."
+                    )
+        return translated, name_map
 
     # ========================================================================
     # Phase 0 — Safe Ingest
