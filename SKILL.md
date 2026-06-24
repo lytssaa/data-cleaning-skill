@@ -276,7 +276,25 @@ schema = cleaner.extract_sqlite_schema("library.db")
 
 ## Batch Output Structure
 
-For multi-file batch cleaning, organize output by source:
+Use ``run_on_directory()`` for batch cleaning:
+
+```python
+from scripts.clean import DataPipelineCleaner
+
+cleaner = DataPipelineCleaner()
+summary = cleaner.run_on_directory(
+    input_dir="./raw_data",
+    output_dir="./cleaned_data",
+    schema_rules={"金额": "float", "积分": "int"},
+    outlier_method="iqr",
+)
+# summary["succeeded"]  → int
+# summary["total_original_rows"] → int
+# summary["overall_retention_pct"] → float
+# summary["files"] → list of per-file dicts with row counts, artifacts
+```
+
+Each source file gets its own subdirectory under *output_dir*:
 
 ```
 cleaned_data/

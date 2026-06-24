@@ -351,6 +351,228 @@ class DataPipelineCleaner:
         return df, self._audit.copy()
 
     # ========================================================================
+    # Batch Processing — run_on_directory
+    # ========================================================================
+
+    # Supported file extensions for batch discovery
+    _BATCH_EXTENSIONS: tuple[str, ...] = (
+        ".csv", ".tsv", ".xlsx", ".xls", ".json",
+        ".parquet", ".feather", ".html", ".htm", ".xml",
+        ".yaml", ".yml", ".db", ".sqlite", ".sqlite3",
+    )
+
+    def run_on_directory(
+        self,
+        input_dir: str | Path,
+        output_dir: str | Path = "cleaned_data",
+        schema_rules: dict[str, str] | dict[str, dict[str, str]] | None = None,
+        engine_kwargs: dict[str, Any] | None = None,
+        iqr_k: float | None = None,
+        lowercase_columns: bool = True,
+        output_encoding: str = "utf-8-sig",
+        outlier_method: str = "iqr",
+        outlier_threshold: float = 0.995,
+        zscore_threshold: float = 3.0,
+        business_rules: dict[str, dict[str, Any]] | None = None,
+        expand_nested: bool = False,
+        expected_min_rows: int | None = None,
+        file_pattern: str = "*.*",
+        skip_errors: bool = True,
+    ) -> dict[str, Any]:
+        """Batch-clean all supported files in a directory.
+
+        Each source file gets its own subdirectory under *output_dir*:
+
+        ::
+
+            cleaned_data/
+            ├── orders/           # Single CSV → orders.csv + orders_audit.json
+            ├── sales_report/     # Multi-sheet Excel → one CSV per sheet + audit
+            ├── user_logs/        # Nested JSON → parent + child CSVs + audit
+            ├── library/          # SQLite → per-table CSVs + schema.json + audit
+            └── _summary.json     # Per-file row counts, retention, errors
+
+        Args:
+            input_dir: Directory containing data files to clean.
+            output_dir: Root directory for cleaned output.
+            file_pattern: Glob pattern to filter files (default ``"*.*"``).
+            skip_errors: If True, log errors and continue; if False, raise.
+            All other arguments are forwarded to :meth:`execute`.
+
+        Returns:
+            Summary dict with per-file statistics and overall totals.
+        """
+        input_path = Path(input_dir)
+        if not input_path.is_dir():
+            raise NotADirectoryError(f"Not a directory: {input_dir}")
+
+        all_schema_rules = schema_rules or {}
+        output_path = Path(output_dir)
+        summary: dict[str, Any] = {
+            "started_at": datetime.now().isoformat(timespec="seconds"),
+            "input_directory": str(input_path.resolve()),
+            "output_directory": str(output_path.resolve()),
+            "total_files": 0,
+            "succeeded": 0,
+            "failed": 0,
+            "total_original_rows": 0,
+            "total_cleaned_rows": 0,
+            "files": [],
+        }
+
+        # Discover supported files
+        seen: set[str] = set()
+        discovered: list[Path] = []
+        for ext in self._BATCH_EXTENSIONS:
+            pat = file_pattern.replace("*.*", f"*{ext}") if file_pattern == "*.*" else file_pattern
+            for fp in input_path.glob(pat):
+                if fp.suffix.lower() == ext and str(fp) not in seen:
+                    seen.add(str(fp))
+                    discovered.append(fp)
+        # Fallback: if file_pattern is something arbitrary, try it directly
+        if not discovered and file_pattern != "*.*":
+            for fp in input_path.glob(file_pattern):
+                if fp.suffix.lower() in self._BATCH_EXTENSIONS and str(fp) not in seen:
+                    seen.add(str(fp))
+                    discovered.append(fp)
+        discovered.sort(key=lambda p: p.name)
+        summary["total_files"] = len(discovered)
+
+        for fp in discovered:
+            file_entry: dict[str, Any] = {
+                "file": fp.name,
+                "path": str(fp),
+                "status": "ok",
+                "subdir": None,
+                "original_rows": 0,
+                "cleaned_rows": 0,
+                "retention_rate_pct": 100.0,
+                "extra_sheets": [],
+                "nested_tables": {},
+                "artifacts": [],
+            }
+            try:
+                # Each source gets its own subdirectory
+                source_subdir = output_path / fp.stem
+                source_subdir.mkdir(parents=True, exist_ok=True)
+                file_entry["subdir"] = str(source_subdir.resolve())
+
+                # Run the pipeline
+                df, audit = self.execute(
+                    file_path=fp,
+                    schema_rules=all_schema_rules,
+                    engine_kwargs=engine_kwargs,
+                    iqr_k=iqr_k,
+                    lowercase_columns=lowercase_columns,
+                    output_encoding=output_encoding,
+                    outlier_method=outlier_method,
+                    outlier_threshold=outlier_threshold,
+                    zscore_threshold=zscore_threshold,
+                    business_rules=business_rules,
+                    expand_nested=expand_nested,
+                    expected_min_rows=expected_min_rows,
+                )
+
+                file_entry["original_rows"] = audit.get("original_rows", 0)
+                file_entry["cleaned_rows"] = audit.get("cleaned_rows", 0)
+                file_entry["retention_rate_pct"] = audit.get("retention_rate_pct", 100.0)
+
+                artifacts = self._save_cleaned_output(
+                    source_subdir, fp.stem, df, audit, output_encoding,
+                )
+                file_entry["artifacts"] = artifacts
+
+                # Extra sheets (from Excel multi-sheet)
+                sheet_dfs = self._sheet_dfs
+                if sheet_dfs:
+                    file_entry["extra_sheets"] = list(sheet_dfs.keys())
+                    for sname, sdf in sheet_dfs.items():
+                        sname_safe = _standardize_col_name(sname, lowercase=lowercase_columns)
+                        sheet_csv = source_subdir / f"{sname_safe}.csv"
+                        sdf.to_csv(sheet_csv, index=False, encoding=output_encoding)
+                        file_entry["artifacts"].append(sheet_csv.name)
+
+                # Nested/expanded child tables
+                nested_dfs = self._nested_dfs
+                if nested_dfs:
+                    for child_name, child_df in nested_dfs.items():
+                        child_csv = source_subdir / f"{fp.stem}_{child_name}.csv"
+                        child_df.to_csv(child_csv, index=False, encoding=output_encoding)
+                        file_entry["artifacts"].append(child_csv.name)
+                        file_entry["nested_tables"][child_name] = len(child_df)
+
+                summary["total_original_rows"] += file_entry["original_rows"]
+                summary["total_cleaned_rows"] += file_entry["cleaned_rows"]
+                summary["succeeded"] += 1
+
+            except Exception as exc:
+                file_entry["status"] = "failed"
+                file_entry["error"] = str(exc)
+                summary["failed"] += 1
+                if not skip_errors:
+                    raise
+
+            summary["files"].append(file_entry)
+
+        # Overall retention rate
+        if summary["total_original_rows"] > 0:
+            summary["overall_retention_pct"] = round(
+                summary["total_cleaned_rows"] / summary["total_original_rows"] * 100, 2
+            )
+        else:
+            summary["overall_retention_pct"] = 0.0
+
+        summary["finished_at"] = datetime.now().isoformat(timespec="seconds")
+
+        # Write _summary.json
+        summary_json = output_path / "_summary.json"
+        with open(summary_json, "w", encoding="utf-8") as f:
+            json.dump(summary, f, ensure_ascii=False, indent=2, default=str)
+
+        return summary
+
+    def _save_cleaned_output(
+        self,
+        subdir: Path,
+        source_stem: str,
+        df: pd.DataFrame,
+        audit: dict[str, Any],
+        output_encoding: str = "utf-8-sig",
+    ) -> list[str]:
+        """Save the main DataFrame and audit JSON into *subdir*.
+
+        Returns a list of saved artifact filenames (relative to *subdir*).
+        """
+        artifacts: list[str] = []
+
+        # Main DataFrame → CSV
+        main_csv = subdir / f"{source_stem}.csv"
+        df.to_csv(main_csv, index=False, encoding=output_encoding)
+        artifacts.append(main_csv.name)
+
+        # Audit → JSON
+        audit_json = subdir / f"{source_stem}_audit.json"
+        with open(audit_json, "w", encoding="utf-8") as f:
+            json.dump(audit, f, ensure_ascii=False, indent=2, default=str)
+        artifacts.append(audit_json.name)
+
+        # SQLite schema (if the source was a database)
+        input_fmt = audit.get("input", {}).get("format", "")
+        if input_fmt in {".db", ".sqlite", ".sqlite3"}:
+            input_path = audit.get("input", {}).get("path", "")
+            if input_path and Path(input_path).exists():
+                try:
+                    schema = self.extract_sqlite_schema(input_path)
+                    schema_json = subdir / f"{source_stem}_schema.json"
+                    with open(schema_json, "w", encoding="utf-8") as f:
+                        json.dump(schema, f, ensure_ascii=False, indent=2, default=str)
+                    artifacts.append(schema_json.name)
+                except Exception:
+                    pass  # schema extraction is best-effort
+
+        return artifacts
+
+    # ========================================================================
     # Schema Rules Helpers
     # ========================================================================
 
