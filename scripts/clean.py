@@ -1397,15 +1397,15 @@ class DataPipelineCleaner:
 
             # Apply clipping - handle both numeric and string columns
             if col in auto_detected_cols:
-                # For auto-detected numeric columns (stored as strings),
-                # convert to numeric, clip, then convert back to string
                 numeric_vals = pd.to_numeric(df[col], errors="coerce")
                 clipped_numeric = numeric_vals.clip(lo_clip_val, hi_clip_val)
-                # Round to avoid floating point precision issues (e.g. 12.708749999999998)
                 clipped_numeric = clipped_numeric.round(2)
                 df[col] = clipped_numeric.astype(str).replace("nan", "")
             else:
-                df[col] = df[col].clip(lo_clip_val, hi_clip_val)
+                clipped = df[col].clip(lo_clip_val, hi_clip_val)
+                if pd.api.types.is_float_dtype(clipped):
+                    clipped = clipped.round(2)
+                df[col] = clipped
             log_entry: dict[str, Any] = {
                 "method": method_label,
                 "lower_fence": round(lo, 4),
