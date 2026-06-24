@@ -87,6 +87,41 @@ Phase 5: 语义输出          summary, score, insights, recommendations
 
 15 种扩展名 / 11 种格式：`.csv` `.tsv` `.xlsx` `.xls` `.json` `.parquet` `.feather` `.html` `.htm` `.xml` `.yaml` `.yml` `.db` `.sqlite` `.sqlite3` `.pkl` `.pickle`
 
+## 输出结构（数据产品包）
+
+每个数据集清洗后生成一个完整的**数据产品包**，包含五层结构：
+
+```
+cleaned_data/
+├── fitness/
+│   ├── data/
+│   │   ├── fitness.csv              ← 清洗后的数据（CSV 格式）
+│   │   └── fitness.parquet          ← 清洗后的数据（Parquet 格式，工业标准）
+│   ├── report/
+│   │   ├── audit.json               ← 完整审计日志（每个阶段的操作记录）
+│   │   └── data_quality.json        ← 数据质量评分卡（分数 + 维度 + 洞察 + 建议）
+│   ├── lineage/
+│   │   └── transformations.json     ← 数据血缘（记录数据从脏到干净的每一步变换）
+│   ├── samples/
+│   │   ├── before_sample.csv        ← 清洗前的前 5 行（用于人工对比）
+│   │   └── after_sample.csv         ← 清洗后的前 5 行
+│   └── metadata.json                ← 控制层（行数、留存率、质量分数、时间戳）
+├── hotels/
+│   └── ...（同样五层结构）
+└── _summary.json                    ← 全局汇总（所有文件的统计）
+```
+
+### 各层作用
+
+| 层 | 文件 | 作用 | 谁用 |
+|----|------|------|------|
+| **data/** | `*.csv` + `*.parquet` | 清洗后的干净数据 | 下游系统直接消费 |
+| **report/** | `audit.json` | 完整操作日志（修复了多少缺失值、截断了多少异常值、每一步用了什么规则） | 开发者调试 |
+| **report/** | `data_quality.json` | 质量评分卡：总分 + completeness/validity/consistency 三维分数 + AI 洞察 + 建议 | AI 直接读取汇报 |
+| **lineage/** | `transformations.json` | 数据血缘链：记录从原始数据到清洗结果的每一步变换 | 数据治理、合规审计 |
+| **samples/** | `before_sample.csv` / `after_sample.csv` | 清洗前后各 5 行对比 | 人工快速验证 |
+| **metadata.json** | — | 控制层：源文件名、行数变化、留存率、质量分数、时间戳 | 自动化流水线 |
+
 ## 安装
 
 ### 各平台安装命令
