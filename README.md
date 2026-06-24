@@ -133,7 +133,7 @@ pip install pandas pyarrow openpyxl xlrd
 ## 管道架构
 
 <p align="center">
-  <img src="assets/pipeline.svg" alt="数据清洗管道架构" width="680">
+  <img src="assets/pipeline.png" alt="数据清洗管道架构" width="680">
 </p>
 
 | Phase | 阶段 | 核心操作 |
