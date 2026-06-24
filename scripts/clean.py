@@ -1224,9 +1224,40 @@ class DataPipelineCleaner:
         total_suppressed = 0
         outlier_log: dict[str, dict[str, Any]] = {}
 
-        numeric_cols = df.select_dtypes(include="number").columns
+        # Auto-detect numeric columns: first check actual numeric dtype,
+        # then try to detect string columns that contain numeric data
+        numeric_cols = df.select_dtypes(include="number").columns.tolist()
+        auto_detected_cols: list[str] = []
+        
+        if not numeric_cols:
+            # No explicit numeric columns - try to detect from string columns
+            for col in df.columns:
+                if df[col].dtype in ("object", "string"):
+                    # Try to convert to numeric to see if it's numeric data
+                    test_convert = pd.to_numeric(df[col], errors="coerce")
+                    # If >50% of non-null values convert successfully, treat as numeric
+                    non_null_count = df[col].notna().sum()
+                    if non_null_count > 0:
+                        success_rate = test_convert.notna().sum() / non_null_count
+                        if success_rate > 0.5:
+                            auto_detected_cols.append(col)
+            
+            if auto_detected_cols:
+                self._audit["warnings"].append(
+                    f"Auto-detected {len(auto_detected_cols)} numeric columns "
+                    f"from string data: {auto_detected_cols}"
+                )
+                numeric_cols = auto_detected_cols
+
         for col in numeric_cols:
-            ser = df[col].dropna()
+            # Handle auto-detected numeric columns (stored as strings)
+            if col in auto_detected_cols:
+                # Convert to numeric for outlier detection
+                numeric_series = pd.to_numeric(df[col], errors="coerce")
+                ser = numeric_series.dropna()
+            else:
+                ser = df[col].dropna()
+            
             if len(ser) < 4:
                 continue
 
@@ -1271,8 +1302,15 @@ class DataPipelineCleaner:
                 meta = {"mean": round(mean_val, 4),
                         "std": round(std_val, 4)}
 
-            below = int((df[col] < lo).sum())
-            above = int((df[col] > hi).sum())
+            # Count outliers - handle both numeric and string columns
+            if col in auto_detected_cols:
+                # For auto-detected numeric columns, convert to numeric for comparison
+                numeric_vals = pd.to_numeric(df[col], errors="coerce")
+                below = int((numeric_vals < lo).sum())
+                above = int((numeric_vals > hi).sum())
+            else:
+                below = int((df[col] < lo).sum())
+                above = int((df[col] > hi).sum())
 
             if below + above == 0:
                 continue
@@ -1282,7 +1320,7 @@ class DataPipelineCleaner:
             hi_clip_val = int(np.ceil(hi)) if is_integer_col else hi
 
             # Track original range for impact reporting
-            clipped_vals = df.loc[df[col] > hi, col].dropna()
+            clipped_vals = df.loc[pd.to_numeric(df[col], errors="coerce") > hi, col].dropna()
             impact_note = None
             if above > 0 and len(clipped_vals) > 0:
                 top5 = clipped_vals.sort_values(ascending=False).head(3).tolist()
@@ -1292,7 +1330,15 @@ class DataPipelineCleaner:
                     f"top clamped values={top5}"
                 )
 
-            df[col] = df[col].clip(lo_clip_val, hi_clip_val)
+            # Apply clipping - handle both numeric and string columns
+            if col in auto_detected_cols:
+                # For auto-detected numeric columns (stored as strings),
+                # convert to numeric, clip, then convert back to string
+                numeric_vals = pd.to_numeric(df[col], errors="coerce")
+                clipped_numeric = numeric_vals.clip(lo_clip_val, hi_clip_val)
+                df[col] = clipped_numeric.astype(str).replace("nan", "")
+            else:
+                df[col] = df[col].clip(lo_clip_val, hi_clip_val)
             log_entry: dict[str, Any] = {
                 "method": method_label,
                 "lower_fence": round(lo, 4),
