@@ -98,16 +98,27 @@
 ## 管道架构
 
 ```mermaid
-%%{init: {'theme': 'base', 'flowchart': {'nodeSpacing': 60, 'rankSpacing': 80}}}%%
-flowchart LR
-    A["📄 原始文件<br/><br/>CSV · Excel<br/>JSON · TSV"] --> B["🔒 第0阶段<br/><br/>安全吞入<br/>dtype=str<br/>零类型推断"]
-    B --> C["🧹 第1阶段<br/><br/>结构规范化<br/>snake_case<br/>幽灵字符剔除"]
-    C --> D["🔧 第2阶段<br/><br/>类型对齐<br/>errors=coerce<br/>脏值→NaN"]
-    D --> E["⚖️ 第3阶段<br/><br/>缺失审判<br/>列>70%斩<br/>行>50%斩"]
-    E --> F["✂️ 第4阶段<br/><br/>异常压制<br/>IQR 截断<br/>绝不删行"]
-    F --> G["✅ 输出<br/><br/>干净数据<br/>+ 审计报告"]
+flowchart TB
+    subgraph title[" "]
+        direction LR
+        T["📄 原始文件 CSV · Excel · JSON · TSV"]
+    end
 
-    style A fill:#f5f5f5,stroke:#999,stroke-width:2px
+    subgraph row1["前三个阶段"]
+        direction LR
+        B["🔒 阶段 0 — 安全吞入<br/>dtype=str 全文本读入<br/>多编码自动回退"] --> C["🧹 阶段 1 — 结构规范化<br/>snake_case · NFKC 半角<br/>幽灵字符 \u200b 剔除"]
+        C --> D["🔧 阶段 2 — 类型对齐<br/>schema_rules 强转<br/>errors=coerce 脏值→NaN"]
+    end
+
+    subgraph row2["后三个阶段"]
+        direction LR
+        E["⚖️ 阶段 3 — 缺失审判<br/>列>70% 斩 · 行>50% 斩<br/>数值中位数 · 文本 Unknown"] --> F["✂️ 阶段 4 — 异常压制<br/>IQR 1.5× Winsorizing<br/>截断边界 · 绝不删行"]
+        F --> G["✅ 输出<br/>干净的 DataFrame<br/>+ 完整审计报告"]
+    end
+
+    title --> row1 --> row2
+
+    style T fill:#f5f5f5,stroke:#999,stroke-width:2px
     style B fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     style C fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
     style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px
