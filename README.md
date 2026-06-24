@@ -101,7 +101,7 @@
 flowchart TB
     subgraph title[" "]
         direction LR
-        T["📄 原始文件 CSV · Excel · JSON · TSV"]
+        T["📄 原始文件<br/>CSV · Excel · JSON · Parquet · SQLite"]
     end
 
     subgraph row1["前三个阶段"]
