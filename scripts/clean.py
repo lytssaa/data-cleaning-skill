@@ -114,6 +114,7 @@ class DataPipelineCleaner:
         self,
         file_path: str | Path,
         schema_rules: dict[str, str],
+        engine_kwargs: dict[str, Any] | None = None,
     ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Run the full five-phase pipeline and return cleaned data + audit.
 
@@ -174,7 +175,7 @@ class DataPipelineCleaner:
         t0 = datetime.now()
 
         # Phase 0: Safe ingest
-        df = self._safe_ingest(Path(file_path))
+        df = self._safe_ingest(Path(file_path), engine_kwargs or {})
         self._audit["original_rows"] = len(df)
         self._audit["stage_timings"]["safe_ingest"] = _elapsed(t0)
 
@@ -209,18 +210,23 @@ class DataPipelineCleaner:
     # Phase 0 — Safe Ingest
     # ========================================================================
 
-    def _safe_ingest(self, file_path: Path) -> pd.DataFrame:
+    def _safe_ingest(
+        self, file_path: Path, engine_kwargs: dict[str, Any] | None = None
+    ) -> pd.DataFrame:
         """Ingest a file with all columns forced to ``str`` (no type infer).
 
         Args:
-            file_path: Resolved ``Path`` to a CSV/TSV/Excel file.
+            file_path: Resolved ``Path`` to a data file.
+            engine_kwargs: Format-specific options:
+                - ``table`` (str): SQLite table name (required when db has multiple tables).
 
         Returns:
             ``pd.DataFrame`` where every cell is a raw string.
 
         Raises:
             FileNotFoundError: If the path does not exist.
-            ValueError: If the suffix is not recognised.
+            ValueError: If the suffix is not recognised or multiple SQLite tables
+                found without a ``table`` kwarg.
             RuntimeError: If every encoding in the chain fails for CSV.
         """
         if not file_path.exists():
@@ -293,12 +299,48 @@ class DataPipelineCleaner:
                     "PyYAML is required for .yaml files. Run: pip install pyyaml"
                 )
             with open(file_path, "r", encoding="utf-8") as fh:
-                data = yaml.safe_load(fh)
+                raw = fh.read()
+            # First attempt: safe_load.  If the YAML contains PyYAML-dumped
+            # numpy/python objects (!!python/… tags), safe_load will fail.
+            try:
+                data = yaml.safe_load(raw)
+            except yaml.YAMLError:
+                # Fallback: strip all !!python/… lines and re-parse.
+                # This removes serialised numpy scalars, dtypes, etc.
+                clean = []
+                for line in raw.splitlines():
+                    if "!!python/" in line:
+                        continue  # skip tagged line entirely
+                    # Also skip known numpy-internal continuation lines
+                    stripped = line.strip()
+                    if stripped in {"args:", "state:", "- f8", "- <", "- null",
+                                     "- true", "- false", "- -1", "- 3", "- 0"}:
+                        continue
+                    if re.match(r"^\s*- &\w+\s*$", line):  # anchor-only lines
+                        continue
+                    if re.match(r"^\s*\*\w+\s*$", line):   # alias references
+                        continue
+                    # Remove !!binary lines
+                    if "!!binary" in line:
+                        continue
+                    clean.append(line)
+                data = yaml.safe_load("\n".join(clean))
             if isinstance(data, list):
                 df = pd.DataFrame(data)
             elif isinstance(data, dict):
-                # Flatten nested dict — use the top-level keys as rows
-                df = pd.DataFrame.from_dict(data, orient="index")
+                # If the dict has a key that looks like a list-of-records,
+                # use that key's value (common pattern: {students: [...], config: {...}})
+                list_keys = [k for k, v in data.items() if isinstance(v, list)]
+                if list_keys:
+                    # Prefer the largest list — that's typically the data
+                    best_key = max(list_keys, key=lambda k: len(data[k]))
+                    df = pd.DataFrame(data[best_key])
+                    self._audit["warnings"].append(
+                        f"YAML: extracted '{best_key}' list ({len(df)} rows). "
+                        f"Other keys: {[k for k in list_keys if k != best_key]}"
+                    )
+                else:
+                    df = pd.DataFrame.from_dict(data, orient="index")
             else:
                 raise ValueError(f"Unexpected YAML root type: {type(data).__name__}")
             return df.astype(str)
@@ -314,15 +356,28 @@ class DataPipelineCleaner:
             table_names = tables["name"].tolist()
             if not table_names:
                 raise ValueError(f"No user tables found in SQLite: {file_path}")
-            # If only one table, use it; otherwise raise to ask for disambiguation
-            if len(table_names) > 1:
-                raise ValueError(
-                    f"Multiple tables found in {file_path}: {table_names}. "
-                    f"Please specify table name via execute(..., engine_kwargs={{'table': 'your_table'}})."
+            target_table = (engine_kwargs or {}).get("table")
+            if target_table:
+                if target_table not in table_names:
+                    raise ValueError(
+                        f"Table '{target_table}' not found in {file_path}. "
+                        f"Available: {table_names}"
+                    )
+                df = pd.read_sql_query(
+                    f'SELECT * FROM "{target_table}"', con, dtype=str
                 )
-            df = pd.read_sql_query(f"SELECT * FROM [{table_names[0]}]", con)
-            con.close()
-            return df.astype(str)
+                con.close()
+                return df
+            if len(table_names) == 1:
+                df = pd.read_sql_query(
+                    f'SELECT * FROM "{table_names[0]}"', con, dtype=str
+                )
+                con.close()
+                return df
+            raise ValueError(
+                f"Multiple tables found in {file_path}: {table_names}. "
+                f"Use engine_kwargs={{'table': '<name>'}} to pick one."
+            )
 
         raise ValueError(
             f"Unsupported file format: '{suffix}'. "
