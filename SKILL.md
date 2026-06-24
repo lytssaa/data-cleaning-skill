@@ -25,7 +25,7 @@ Use this skill whenever the user provides a tabular file and asks to:
 - Normalize text (whitespace, casing, full-width, ghost characters)
 - Produce a data quality audit report
 
-Supported input formats: `.csv`, `.tsv`, `.xlsx`, `.xls`, `.json` (array of objects).
+Supported input formats: `.csv`, `.tsv`, `.xlsx`, `.xls`, `.json`, `.parquet`, `.feather`, `.html`, `.htm`, `.xml`, `.yaml`, `.yml`, `.db`, `.sqlite`, `.sqlite3`.
 
 ## Architecture
 
@@ -37,6 +37,7 @@ Raw File
 │ Phase 0 — _safe_ingest(file_path)               │
 │   All columns read as dtype=str.  Zero type      │
 │   inference.  Protects IDs, codes, long numbers. │
+│   Supports 13 formats inc. Parquet, SQLite, YAML.│
 └──────────────────────┬───────────────────────────┘
                        ▼
 ┌──────────────────────────────────────────────────┐
@@ -50,6 +51,7 @@ Raw File
 │ Phase 2 — _type_alignment(df, schema_rules)     │
 │   Coerce columns per user mapping.  errors=      │
 │   'coerce': dirty strings → NaN, not exceptions. │
+│   Int columns use nullable Int64 for NaN safety. │
 └──────────────────────┬───────────────────────────┘
                        ▼
 ┌──────────────────────────────────────────────────┐
@@ -57,12 +59,21 @@ Raw File
 │   Column >70% null → drop column.                │
 │   Row    >50% null → drop row.                   │
 │   Numeric → median; categorical → "Unknown".     │
+│   business_rules override default strategy per   │
+│   column (e.g. "return_date NA = not_returned"). │
 └──────────────────────┬───────────────────────────┘
                        ▼
 ┌──────────────────────────────────────────────────┐
 │ Phase 4 — _outlier_suppression(df)              │
-│   IQR (1.5×) Winsorizing.  Clips to fence        │
-│   bounds — never deletes a row.                  │
+│   Multi-strategy: IQR / percentile / zscore.     │
+│   Clips to fence bounds — never deletes a row.   │
+│   Percentile best for long-tail (e-commerce).     │
+└──────────────────────┬───────────────────────────┘
+                       ▼
+┌──────────────────────────────────────────────────┐
+│ Phase 4.5 — _auto_expand_nested(df) (optional)   │
+│   Auto-detects & flattens nested JSON/list cols. │
+│   Returns child DataFrames for 1:N analysis.     │
 └──────────────────────┬───────────────────────────┘
                        ▼
               (cleaned_df, audit_report)
@@ -108,6 +119,135 @@ Passed as `{column_name: target_type}`.  Supported types:
 | `"datetime"` | `pd.to_datetime(…, errors="coerce")`                     |
 
 Columns not listed in `schema_rules` stay as strings.
+
+## Outlier Strategies
+
+Control via `outlier_method` parameter:
+
+| Method         | When to use                                | Param              |
+| -------------- | ------------------------------------------ | ------------------ |
+| `"percentile"` | Long-tail data (e-commerce, finance)       | `outlier_threshold` (default 0.995) |
+| `"iqr"`        | Normal/symmetric distributions             | `iqr_k` (default 1.5) |
+| `"zscore"`     | Known normal distribution                  | `zscore_threshold` (default 3.0) |
+| `"none"`       | Skip outlier handling entirely             | —                  |
+
+```python
+# Long-tail e-commerce data: only clip top/bottom 0.5%
+df, audit = cleaner.execute(
+    "orders.csv",
+    schema_rules={"price": "float"},
+    outlier_method="percentile",
+    outlier_threshold=0.995,
+)
+
+# Strict IQR for survey data
+df, audit = cleaner.execute(
+    "survey.csv",
+    schema_rules={"age": "int"},
+    outlier_method="iqr",
+    iqr_k=1.5,
+)
+```
+
+## Business Rules for Missing Values
+
+Use `business_rules` to distinguish semantic NAs from data-quality NAs.
+Semantic NAs are tagged `"type": "business_na"` in the audit.
+
+```python
+# return_date NA = "not yet returned" (business meaning)
+# 实际完成 NA = "not yet occurred" (future quarter)
+df, audit = cleaner.execute(
+    "library.db",
+    schema_rules={"return_date": "datetime", "实际完成(万元)": "float"},
+    engine_kwargs={"table": "borrows"},
+    business_rules={
+        "return_date": {"missing_means": "not_returned", "fill": "未还"},
+        "实际完成(万元)": {"missing_means": "not_yet", "fill": None},
+    },
+)
+# audit["business_na_fixed"] = 161  (separate from data-quality missing)
+```
+
+## Nested JSON / List Expansion
+
+When a column contains serialised JSON arrays or Python lists, use
+`expand_nested=True` to auto-detect and flatten them into child DataFrames.
+The expanded tables are accessible via `audit["_nested_dfs"]`.
+
+```python
+df, audit = cleaner.execute(
+    "user_logs.json",
+    schema_rules={"session_start": "datetime"},
+    expand_nested=True,  # auto-detect & explode
+)
+# audit["nested_tables"] = {"events": 2247}  ← 500 sessions → 2247 events
+# audit["_nested_dfs"]["events"] → child DataFrame
+```
+
+Or expand a specific column manually after cleaning:
+
+```python
+events_df = cleaner.expand_nested(df, "events", id_column="session_id")
+```
+
+## Row Count Validation
+
+For truncated file formats (YAML/JSON exports), set `expected_min_rows`:
+
+```python
+df, audit = cleaner.execute(
+    "grades.yaml",
+    schema_rules={"score": "int"},
+    expected_min_rows=100,  # warn if fewer than 100 rows
+)
+# Warning: "Row count (50) below expected minimum (100). Data may be truncated."
+```
+
+## SQLite Database Support
+
+Pass `.db` / `.sqlite` / `.sqlite3` files.  For multi-table databases,
+specify the table via `engine_kwargs`:
+
+```python
+df, audit = cleaner.execute(
+    "library.db",
+    schema_rules={"price": "float", "stock": "int"},
+    engine_kwargs={"table": "books"},
+)
+
+# Extract full schema with foreign keys for downstream JOIN analysis
+schema = cleaner.extract_sqlite_schema("library.db")
+# schema["foreign_keys"] = [{"from": "borrows.book_id", "to": "books.book_id"}]
+```
+
+## Batch Output Structure
+
+For multi-file batch cleaning, organize output by source:
+
+```
+cleaned_data/
+├── orders/                    # Single CSV
+│   ├── orders.csv
+│   └── orders_audit.json
+├── sales_report/              # Multi-sheet Excel
+│   ├── 销售明细.csv
+│   ├── 产品利润表.csv
+│   ├── 季度KPI.csv
+│   └── sales_audit.json
+├── user_logs/                 # Nested JSON expanded
+│   ├── user_logs.csv
+│   ├── user_logs_events.csv
+│   └── user_logs_audit.json
+├── library/                   # Multi-table SQLite
+│   ├── books.csv
+│   ├── authors.csv
+│   ├── borrows.csv
+│   ├── members.csv
+│   ├── schema.json
+│   └── library_audit.json
+└── _summary.json              # Overall summary
+```
 
 ## Audit Report
 
