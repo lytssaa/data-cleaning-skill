@@ -117,6 +117,7 @@ class DataPipelineCleaner:
         engine_kwargs: dict[str, Any] | None = None,
         iqr_k: float | None = None,
         lowercase_columns: bool = True,
+        output_encoding: str = "utf-8-sig",
     ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Run the full five-phase pipeline and return cleaned data + audit.
 
@@ -175,11 +176,22 @@ class DataPipelineCleaner:
         }
 
         t0 = datetime.now()
+        fp = Path(file_path)
 
         # Phase 0: Safe ingest
-        df = self._safe_ingest(Path(file_path), engine_kwargs or {})
+        df = self._safe_ingest(fp, engine_kwargs or {})
         self._audit["original_rows"] = len(df)
         self._audit["stage_timings"]["safe_ingest"] = _elapsed(t0)
+        # Record input/output format metadata
+        self._audit["input"] = {
+            "file": str(fp.name),
+            "format": fp.suffix.lower(),
+            "path": str(fp),
+        }
+        self._audit["output"] = {
+            "format": "csv",
+            "encoding": output_encoding,
+        }
 
         # Phase 1: Standardise columns & text
         df = self._standardize_columns_and_text(df, lowercase=lowercase_columns)
@@ -608,6 +620,10 @@ class DataPipelineCleaner:
                 median_val = df[col].median()
                 if pd.isna(median_val):
                     median_val = 0
+                # Integer columns (including nullable Int64) need an integer
+                # fill value, otherwise fillna(72.5) raises TypeError.
+                if pd.api.types.is_integer_dtype(df[col]):
+                    median_val = round(float(median_val))
                 df[col] = df[col].fillna(median_val)
                 imputation_log[col] = {
                     "strategy": "median",
@@ -785,6 +801,58 @@ class DataPipelineCleaner:
                     r = {key_col: parent_id, **item}
                     rows.append(r)
         return pd.DataFrame(rows)
+
+    # ========================================================================
+    # Utility — Extract SQLite Schema
+    # ========================================================================
+
+    @staticmethod
+    def extract_sqlite_schema(db_path: str | Path) -> dict[str, Any]:
+        """Extract table schemas and foreign-key relationships from a SQLite db.
+
+        Returns a dict suitable for serialisation to ``schema.json``, so
+        downstream JOIN analysis can reconstruct relationships.
+
+        Args:
+            db_path: Path to a ``.db`` / ``.sqlite`` / ``.sqlite3`` file.
+
+        Returns:
+            Dict with ``tables`` (list of column definitions) and
+            ``foreign_keys`` (list of FK relationships).
+
+        Example:
+            >>> schema = cleaner.extract_sqlite_schema("library.db")
+            >>> schema["foreign_keys"]
+            [{"from": "borrows.book_id", "to": "books.book_id"}, ...]
+        """
+        import sqlite3
+        con = sqlite3.connect(str(db_path))
+        cur = con.cursor()
+        tables_q = cur.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name NOT LIKE 'sqlite_%'"
+        ).fetchall()
+        tables = []
+        for (tbl,) in tables_q:
+            cols = cur.execute(f"PRAGMA table_info('{tbl}')").fetchall()
+            columns = [
+                {"name": c[1], "type": c[2], "nullable": not c[3],
+                 "default": c[4], "pk": bool(c[5])}
+                for c in cols
+            ]
+            tables.append({"name": tbl, "columns": columns})
+        foreign_keys = []
+        for (tbl,) in tables_q:
+            fks = cur.execute(f"PRAGMA foreign_key_list('{tbl}')").fetchall()
+            for fk in fks:
+                foreign_keys.append({
+                    "from": f"{tbl}.{fk[3]}",
+                    "to": f"{fk[2]}.{fk[4]}",
+                    "on_delete": fk[5],
+                    "on_update": fk[6],
+                })
+        con.close()
+        return {"tables": tables, "foreign_keys": foreign_keys}
 
 
 # ============================================================================
