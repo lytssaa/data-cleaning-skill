@@ -120,6 +120,27 @@ Passed as `{column_name: target_type}`.  Supported types:
 
 Columns not listed in `schema_rules` stay as strings.
 
+### Per-Sheet / Per-Table Rules (multi-sheet Excel / multi-table DB)
+
+For workbooks with heterogeneous sheets, specify rules per sheet name:
+
+```python
+df, audit = cleaner.execute(
+    "gym.xlsx",
+    schema_rules={
+        "会员信息": {"会员类型": "str", "入会日期": "datetime"},
+        "健身记录": {"体重kg": "float", "时长分钟": "int"},
+        "体测记录": {"BMI": "float", "体脂率": "float"},
+    },
+)
+# Sheet 会员信息 → 会员类型 coerced to str
+# Sheet 健身记录 → 体重kg coerced to float
+# Sheet 体测记录 → BMI coerced to float
+# No cross-sheet noise — unmatched columns silently skipped.
+```
+
+A flat `dict[str, str]` (the default) is applied to all sheets. In multi-sheet mode with shared rules, a single summary warning is emitted instead of per-column noise.
+
 ## Outlier Strategies
 
 Control via `outlier_method` parameter:
@@ -154,20 +175,52 @@ df, audit = cleaner.execute(
 Use `business_rules` to distinguish semantic NAs from data-quality NAs.
 Semantic NAs are tagged `"type": "business_na"` in the audit.
 
+### Common patterns
+
 ```python
-# return_date NA = "not yet returned" (business meaning)
-# 实际完成 NA = "not yet occurred" (future quarter)
+business_rules = {
+    # NULL 会员类型 → "未指定" (not "Unknown" — has business meaning)
+    "会员类型": {"missing_means": "not_specified", "fill": "未指定"},
+
+    # NULL 退货日期 → "未退货" (recorded but never returned)
+    "return_date": {"missing_means": "not_returned", "fill": "未还"},
+
+    # NULL 实际完成(万元) → keep as NA (future quarter, not yet realized)
+    "实际完成(万元)": {"missing_means": "not_yet", "fill": None},
+
+    # NULL 薪资下限 → 0 (entry-level / unreported)
+    "salary_lower": {"missing_means": "unreported", "fill": 0},
+
+    # NULL 备注 → "" (empty notes, not missing data)
+    "备注": {"missing_means": "no_notes", "fill": ""},
+}
+```
+
+### Full example
+
+```python
 df, audit = cleaner.execute(
-    "library.db",
-    schema_rules={"return_date": "datetime", "实际完成(万元)": "float"},
-    engine_kwargs={"table": "borrows"},
+    "members.csv",
+    schema_rules={"age": "int", "income": "float"},
     business_rules={
+        "会员类型": {"missing_means": "not_specified", "fill": "未指定"},
         "return_date": {"missing_means": "not_returned", "fill": "未还"},
-        "实际完成(万元)": {"missing_means": "not_yet", "fill": None},
     },
 )
-# audit["business_na_fixed"] = 161  (separate from data-quality missing)
+# audit["business_na_fixed"] = 161   ← business-rule imputations
+# audit["missing_values_fixed"] = 12 ← data-quality imputations (median/Unknown)
 ```
+
+### Default behavior (no business_rules)
+
+Columns without business rules are imputed automatically:
+- **Numeric** → median value
+- **Datetime** → forward-fill (last valid value)
+- **Text/Category** → `"Unknown"`
+
+> **Tip**: If `"Unknown"` doesn't match your domain semantics (e.g., Chinese datasets
+> where `"未指定"` / `"未填写"` is more natural), use `business_rules` for those columns.
+> There is no global default text override — this is by design, to avoid ambiguity.
 
 ## Nested JSON / List Expansion
 
@@ -295,3 +348,80 @@ The `execute()` method returns `(cleaned_df, audit_dict)` where `audit_dict` con
 2. **Never overwrite the input file.**  Output goes to a new path.
 3. **Type coercion is best-effort.**  Uncastable values become `NaN` and are handled by the missing-value phase.
 4. **Report in the same language the user used.**  Chinese user gets Chinese audit descriptions.
+
+## Saving the Audit (JSON-safe)
+
+The audit dict returned by `execute()` is **fully JSON-serializable** — no DataFrames
+are embedded. Use `json.dump` directly:
+
+```python
+import json
+
+df, audit = cleaner.execute("data.csv", schema_rules=...)
+
+with open("audit.json", "w", encoding="utf-8") as f:
+    json.dump(audit, f, ensure_ascii=False, indent=2)
+```
+
+Extra sheet/nested DataFrames are accessed via **cleaner properties**, not the audit dict:
+
+```python
+# After execute() on a multi-sheet Excel:
+for sheet_name, sdf in cleaner.sheet_dfs.items():
+    sdf.to_csv(f"{sheet_name}.csv", index=False)
+
+# After execute(expand_nested=True):
+events_df = cleaner.nested_dfs["events"]
+```
+
+The audit dict contains JSON-safe metadata summaries instead:
+- `_sheet_dfs_summary`: `{"Sheet1": {"rows": 100, "cols": 5, "columns": [...]}}`
+- `_nested_dfs_summary`: `{"events": {"rows": 2247, "cols": 4, "columns": [...]}}`
+
+## Custom Business Validation (Post-Pipeline)
+
+The pipeline handles data quality (types, nulls, outliers).  **Business logic**
+validation happens after `execute()`:
+
+```python
+df, audit = cleaner.execute("jobs.csv", schema_rules={
+    "salary_lower": "float", "salary_upper": "float",
+})
+
+# Business rule: salary_lower must be <= salary_upper
+bad = df["salary_lower"] > df["salary_upper"]
+if bad.any():
+    print(f"⚠ {bad.sum()} rows have salary_lower > salary_upper")
+    audit["business_validation"] = {
+        "salary_range_invalid": int(bad.sum()),
+        "sample_indices": df.index[bad].tolist()[:5],
+    }
+```
+
+Common business validations to add post-pipeline:
+- `salary_lower <= salary_upper` — salary range logic
+- `start_date <= end_date` — date range logic
+- `quantity * unit_price ≈ total_price` — computed field checks
+- Domain-specific value constraints (e.g., `0 <= age <= 150`)
+
+## Profile Script
+
+`scripts/profile.py` supports all 13 formats that `clean.py` supports:
+
+| Format | Extension |
+| ------ | --------- |
+| CSV / TSV | `.csv` `.tsv` |
+| Excel | `.xlsx` `.xls` |
+| JSON | `.json` |
+| Parquet | `.parquet` |
+| Feather | `.feather` |
+| HTML | `.html` `.htm` |
+| XML | `.xml` |
+| YAML | `.yaml` `.yml` |
+| SQLite | `.db` `.sqlite` `.sqlite3` |
+
+```bash
+# CLI usage
+python scripts/profile.py sales.parquet --top 10
+python scripts/profile.py delivery.db --json
+```

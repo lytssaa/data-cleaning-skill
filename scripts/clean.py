@@ -120,6 +120,21 @@ class DataPipelineCleaner:
         """
         self.encoding_sequence = encoding_sequence
         self._audit: dict[str, Any] = {}
+        # Programmatic access to extra DataFrames (NOT in audit — audit is JSON-safe)
+        self._nested_dfs: dict[str, pd.DataFrame] = {}
+        self._sheet_dfs: dict[str, pd.DataFrame] = {}
+
+    # ── Extra DataFrame accessors (JSON-safe, programmatic only) ─────────
+
+    @property
+    def nested_dfs(self) -> dict[str, pd.DataFrame]:
+        """Expanded nested-column child tables (populated after execute() with expand_nested=True)."""
+        return self._nested_dfs
+
+    @property
+    def sheet_dfs(self) -> dict[str, pd.DataFrame]:
+        """Extra Excel sheet DataFrames (populated after execute() on multi-sheet workbooks)."""
+        return self._sheet_dfs
 
     # ========================================================================
     # Public API
@@ -128,7 +143,7 @@ class DataPipelineCleaner:
     def execute(
         self,
         file_path: str | Path,
-        schema_rules: dict[str, str],
+        schema_rules: dict[str, str] | dict[str, dict[str, str]],
         engine_kwargs: dict[str, Any] | None = None,
         iqr_k: float | None = None,
         lowercase_columns: bool = True,
@@ -158,6 +173,10 @@ class DataPipelineCleaner:
                 ``.yaml``, ``.yml``, ``.db``, ``.sqlite``, or ``.sqlite3``.
             schema_rules: Mapping of column name → target dtype.  Supported
                 values: ``'int'``, ``'float'``, ``'str'``, ``'datetime'``.
+                For multi-sheet Excel / multi-table SQLite, pass a dict of
+                dicts keyed by sheet/table name for per-table rules:
+                ``{"Sheet1": {"age": "int"}, "Sheet2": {"price": "float"}}``.
+                A flat dict is applied to all sheets/tables.
             outlier_method: ``"iqr"`` (default), ``"percentile"`` (best for
                 long-tail distributions like e-commerce/finance), ``"zscore"``,
                 or ``"none"``.
@@ -207,10 +226,28 @@ class DataPipelineCleaner:
         # ── Pre-compute column name mapping for schema_rules ───────────────
         # Phase 1 will rename columns.  We translate schema_rules keys now
         # so Phase 2 receives column names that actually exist.
+        # Detect nested (per-sheet) vs flat (shared) schema_rules.
+        is_nested = self._is_nested_rules(schema_rules)
+        sheets_order: list[str] = self._audit.get("_raw_sheets_order", [])
+        is_multi = len(sheets_order) > 1
+        main_sheet_name = sheets_order[0] if sheets_order else None
+        main_rules = self._resolve_sheet_rules(schema_rules, main_sheet_name)
+        # In multi-sheet mode with shared rules, suppress per-column
+        # "not found" warnings to avoid noise from heterogeneous sheets.
+        suppress_warn = is_multi and not is_nested
         translated_rules, name_map = self._translate_schema_rules(
-            df, schema_rules, lowercase_columns,
+            df, main_rules, lowercase_columns, suppress_warnings=suppress_warn,
         )
         self._audit["column_name_mapping"] = name_map
+        # In multi-sheet mode with shared rules, warn once that different
+        # sheets may have different columns and some rules may not apply.
+        if is_multi and not is_nested:
+            self._audit["warnings"].append(
+                f"Shared schema_rules applied to {len(sheets_order)} sheets "
+                f"({sheets_order}). Columns not present in a sheet are "
+                f"silently skipped. Use per-sheet rules for granular control: "
+                f"schema_rules={{'Sheet1': {{...}}, 'Sheet2': {{...}}}}"
+            )
         # Record input/output format metadata
         self._audit["input"] = {
             "file": str(fp.name),
@@ -257,9 +294,11 @@ class DataPipelineCleaner:
         if raw_sheets:
             for sname, raw_df in raw_sheets.items():
                 try:
-                    # Compute schema mapping for THIS sheet's columns
+                    # Resolve per-sheet schema_rules
+                    s_rules = self._resolve_sheet_rules(schema_rules, sname)
                     s_translated, _ = self._translate_schema_rules(
-                        raw_df, schema_rules, lowercase_columns,
+                        raw_df, s_rules, lowercase_columns,
+                        suppress_warnings=suppress_warn,
                     )
                     s_df = self._standardize_columns_and_text(
                         raw_df, lowercase=lowercase_columns
@@ -279,7 +318,6 @@ class DataPipelineCleaner:
                         f"Multi-sheet processing failed for '{sname}': {exc}"
                     )
             self._audit["sheets_processed"] = sheet_order
-            self._audit["_sheet_dfs"] = sheet_dfs
 
         # Phase 5: Final audit assembly
         self._audit["cleaned_rows"] = len(df)
@@ -289,9 +327,63 @@ class DataPipelineCleaner:
             round(cleaned / original * 100, 2) if original > 0 else 0.0
         )
         self._audit["finished_at"] = datetime.now().isoformat(timespec="seconds")
-        self._audit["_nested_dfs"] = nested_dfs
+
+        # ── Store expanded/sheet DataFrames for programmatic access ─────
+        # NOT in the audit dict (which must be JSON-serializable).
+        # Use cleaner.nested_dfs / cleaner.sheet_dfs after execute().
+        self._nested_dfs = nested_dfs
+        self._sheet_dfs = sheet_dfs
+
+        # Audit only contains JSON-safe metadata summaries
+        if nested_dfs:
+            self._audit["_nested_dfs_summary"] = {
+                col: {"rows": len(child), "cols": child.shape[1],
+                       "columns": child.columns.tolist()}
+                for col, child in nested_dfs.items()
+            }
+        if sheet_dfs:
+            self._audit["_sheet_dfs_summary"] = {
+                sname: {"rows": len(sdf), "cols": sdf.shape[1],
+                         "columns": sdf.columns.tolist()}
+                for sname, sdf in sheet_dfs.items()
+            }
 
         return df, self._audit.copy()
+
+    # ========================================================================
+    # Schema Rules Helpers
+    # ========================================================================
+
+    @staticmethod
+    def _is_nested_rules(rules: dict) -> bool:
+        """Return True if *rules* is a dict-of-dicts (per-sheet rules)."""
+        if not rules:
+            return False
+        # At least one value must be a dict → nested
+        return any(isinstance(v, dict) for v in rules.values())
+
+    @staticmethod
+    def _resolve_sheet_rules(
+        rules: dict[str, str] | dict[str, dict[str, str]],
+        sheet_name: str | None = None,
+    ) -> dict[str, str]:
+        """Resolve per-sheet schema_rules for a given sheet/table name.
+
+        - If *rules* is flat (dict[str, str]) → return as-is.
+        - If *rules* is nested (dict[str, dict]) and *sheet_name* matches
+          a key → return the matching sub-dict.
+        - If nested but no match → return empty dict (no rules for this sheet).
+        """
+        if not rules:
+            return {}
+        if DataPipelineCleaner._is_nested_rules(rules):
+            if sheet_name is not None and sheet_name in rules:
+                val = rules[sheet_name]
+                if isinstance(val, dict):
+                    return val  # type: ignore[return-value]
+            return {}
+        # Flat dict — shared across all sheets
+        return rules  # type: ignore[return-value]
 
     # ========================================================================
     # Schema Rules Translation (shared by main DF and multi-sheet processing)
@@ -300,12 +392,18 @@ class DataPipelineCleaner:
     def _translate_schema_rules(
         self, df: pd.DataFrame, schema_rules: dict[str, str],
         lowercase_columns: bool,
+        suppress_warnings: bool = False,
     ) -> tuple[dict[str, str], dict[str, str]]:
         """Translate *schema_rules* keys to post-standardisation column names.
 
         Phase 1 will rename columns.  We predict what each column name will
         become, then map *schema_rules* keys to those predicted names so
         Phase 2 receives column names that actually exist.
+
+        Args:
+            suppress_warnings: If True, skip "not found" warnings.  Useful
+                in multi-sheet mode where different sheets have different
+                columns and mismatches are expected.
 
         Returns:
             ``(translated_rules, name_map)`` where *name_map* is
@@ -343,10 +441,14 @@ class DataPipelineCleaner:
                         translated[pred] = target
                         break
                 else:
-                    self._audit["warnings"].append(
-                        f"schema_rules key '{col_key}' not found in "
-                        f"columns {list(name_map.keys())[:10]}..."
-                    )
+                    if not suppress_warnings:
+                        all_keys = list(name_map.keys())
+                        shown = all_keys if len(all_keys) <= 50 else all_keys[:50]
+                        suffix = f" (and {len(all_keys) - 50} more)" if len(all_keys) > 50 else ""
+                        self._audit["warnings"].append(
+                            f"schema_rules key '{col_key}' not found in "
+                            f"columns: {shown}{suffix}"
+                        )
         return translated, name_map
 
     # ========================================================================
