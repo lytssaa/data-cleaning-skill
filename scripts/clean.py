@@ -661,7 +661,7 @@ class DataPipelineCleaner:
             else:
                 # Try case-insensitive match as fallback
                 for orig, pred in name_map.items():
-                    if orig.lower() == col_key.lower():
+                    if str(orig).lower() == str(col_key).lower():
                         translated[pred] = target
                         break
                 else:
@@ -1146,9 +1146,11 @@ class DataPipelineCleaner:
             vals_to_replace = rule.get("replace_values")
             if vals_to_replace is None or col not in df.columns:
                 continue
-            # Convert to numeric first for accurate comparison
-            numeric_col = pd.to_numeric(df[col], errors="coerce")
-            mask = numeric_col.isin(vals_to_replace)
+            try:
+                numeric_col = pd.to_numeric(df[col], errors="coerce")
+                mask = numeric_col.isin(vals_to_replace)
+            except Exception:
+                continue
             replaced = int(mask.sum())
             if replaced > 0:
                 df.loc[mask, col] = pd.NA

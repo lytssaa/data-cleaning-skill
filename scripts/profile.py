@@ -101,6 +101,19 @@ def _read(path: Path) -> pd.DataFrame:
                 return pd.DataFrame(data[best_key])
             return pd.DataFrame.from_dict(data, orient="index")
         raise ValueError(f"Unexpected YAML root type: {type(data).__name__}")
+    if suf in {".pkl", ".pickle"}:
+        data = pd.read_pickle(path)
+        if isinstance(data, dict) and "columns" in data and "data" in data:
+            return pd.DataFrame(data["data"], columns=data["columns"])
+        if isinstance(data, dict):
+            list_keys = [k for k, v in data.items() if isinstance(v, list)]
+            if list_keys:
+                best = max(list_keys, key=lambda k: len(data[k]))
+                return pd.DataFrame(data[best])
+            return pd.DataFrame.from_dict(data, orient="index")
+        if isinstance(data, list):
+            return pd.DataFrame(data)
+        return data if isinstance(data, pd.DataFrame) else pd.DataFrame([data])
     if suf in {".db", ".sqlite", ".sqlite3"}:
         con = sqlite3.connect(str(path))
         tables = pd.read_sql_query(
@@ -137,23 +150,29 @@ def _read(path: Path) -> pd.DataFrame:
 
 
 def profile(df: pd.DataFrame, top: int = 5) -> dict:
+    # Flatten any list/dict columns to strings so pandas hash operations work
+    df_work = df.copy()
+    for col in df_work.columns:
+        if df_work[col].apply(lambda x: isinstance(x, (list, dict))).any():
+            df_work[col] = df_work[col].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+
     # Pre-compute column name mapping so AI sees standardised names
     col_mapping = {}
-    for col in df.columns:
+    for col in df_work.columns:
         std = _standardize_col_name(col)
         if std != str(col):
             col_mapping[str(col)] = std
 
     out: dict = {
-        "shape": {"rows": int(len(df)), "cols": int(df.shape[1])},
-        "duplicate_rows": int(df.duplicated().sum()),
+        "shape": {"rows": int(len(df_work)), "cols": int(df_work.shape[1])},
+        "duplicate_rows": int(df_work.duplicated().sum()),
         "columns": [],
     }
     if col_mapping:
         out["column_name_mapping"] = col_mapping
 
-    for col in df.columns:
-        s = df[col]
+    for col in df_work.columns:
+        s = df_work[col]
         n_null = int(s.isna().sum())
         n_unique = int(s.nunique(dropna=True))
         sample = (
