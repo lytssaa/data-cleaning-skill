@@ -89,13 +89,120 @@ Phase 5: 语义输出          summary, score, insights, recommendations
 
 ## 安装
 
-```bash
-# MiMo Code
-git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.config/mimocode/skills/data-cleaning
+### 各平台安装命令
 
-# Claude Desktop
+| 平台 | 命令 | 说明 |
+|------|------|------|
+| **MiMo Code** | `git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.config/mimocode/skills/data-cleaning` | 读 SKILL.md 直接用 |
+| **Claude Code** | `git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.claude/skills/data-cleaning` | 同上 |
+| **AtomCode** | `git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.atomcode/skills/data-cleaning` | 同上 |
+| **WorkBuddy** | `workbuddy skill install https://github.com/lytssaa/data-cleaning-skill` | 或手动 clone |
+| **Claude Desktop** | 见下方 MCP 配置 | 需要额外配置 adapter |
+
+### Claude Desktop MCP 配置
+
+```bash
 pip install mcp pandas pyarrow openpyxl
-# 然后配置 claude_desktop_config.json（详见 adapters/claude/README.md）
+```
+
+编辑 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "data-cleaning": {
+      "command": "python",
+      "args": ["adapters/claude/server.py"],
+      "cwd": "/你的安装路径/data-cleaning"
+    }
+  }
+}
+```
+
+### 通用依赖
+
+```bash
+pip install pandas pyarrow openpyxl xlrd
+```
+
+编辑 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "data-cleaning": {
+      "command": "python",
+      "args": ["adapters/claude/server.py"],
+      "cwd": "/你的安装路径/data-cleaning"
+    }
+  }
+}
+```
+
+### 通用依赖
+
+```bash
+pip install pandas pyarrow openpyxl xlrd
+```
+
+编辑 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "data-cleaning": {
+      "command": "python",
+      "args": ["adapters/claude/server.py"],
+      "cwd": "/你的安装路径/data-cleaning"
+    }
+  }
+}
+```
+
+### 通用依赖
+
+```bash
+pip install pandas pyarrow openpyxl xlrd
+```
+
+编辑 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "data-cleaning": {
+      "command": "python",
+      "args": ["adapters/claude/server.py"],
+      "cwd": "/你的安装路径/data-cleaning"
+    }
+  }
+}
+```
+
+### 通用依赖
+
+```bash
+pip install pandas pyarrow openpyxl xlrd
+```
+
+编辑 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "data-cleaning": {
+      "command": "python",
+      "args": ["adapters/claude/server.py"],
+      "cwd": "/你的安装路径/data-cleaning"
+    }
+  }
+}
+```
+
+### 通用依赖
+
+```bash
+pip install pandas pyarrow openpyxl xlrd
 ```
 
 ## 依赖
