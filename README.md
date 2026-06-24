@@ -1,12 +1,10 @@
-# Data Cleaning Skill v2 — AI-Native MCP Pipeline
+# Data Cleaning Skill v2 — AI 原生数据清洗管道
 
-> Industrial-grade data cleaning for AI agents. Seven-phase pipeline with semantic output.
+> 面向 AI 智能体的工业级数据清洗工具。七阶段管道架构，语义输出层，四平台兼容。
+>
+> **数据清洗 · 缺失值处理 · 异常值检测 · 语义标记 · ETL 管道**
 
-## What This Does
-
-Takes dirty data → applies type rules, semantic tagging, missing handling, per-column outlier detection → returns clean data + AI-readable audit.
-
-## Quick Start
+## 快速开始
 
 ```python
 from scripts.clean import DataPipelineCleaner
@@ -20,68 +18,76 @@ cleaned_df, audit = cleaner.execute(
     outlier_rules={"salary": {"method": "iqr"}},
 )
 
-# AI-native output
+# AI 可直接读取的语义输出
 print(audit["semantic_output"]["summary"])
 print(audit["semantic_output"]["data_quality_score"])
 ```
 
-## v2 Architecture
+## v2 管道架构
 
 ```
-Phase 0: Safe Ingest        CSV→str, Parquet/Feather→native types
-Phase 1: Standardize        snake_case, NFKC, ghost chars
-Phase 2: Type Alignment     schema_rules: str→int/float/datetime
-Phase 2.3: Semantic Tag     semantic_rules: tag invalid/suspicious (no data modification)
-Phase 2.4: Decision Engine  invalid→NaN, suspicious→flag+keep, legacy replace_values
-Phase 2.5: Missing Rules    missing_rules: sentinel→NaN (separate from semantic)
-Phase 3: Missing Trial      drop cols>70%, rows>50%, fill median/Unknown
-Phase 4: Outlier Suppress   per-column methods (iqr/percentile/zscore/none)
-Phase 5: Semantic Output    summary, score, insights, recommendations
+Phase 0: 数据读取          CSV→str, Parquet/Feather→保留原生类型
+Phase 1: 标准化            snake_case列名, NFKC全角转半角, 幽灵字符剔除
+Phase 2: 类型对齐          schema_rules: str→int/float/datetime
+Phase 2.3: 语义标记        semantic_rules: 标记 invalid/suspicious（不改数据）
+Phase 2.4: 决策引擎        invalid→NaN, suspicious→保留+标记, 旧版 replace_values
+Phase 2.5: 缺失规则        missing_rules: sentinel→NaN（与语义层分离）
+Phase 3: 缺失值处理        列>70%删除, 行>50%删除, 填充 median/Unknown
+Phase 4: 异常值压制        per-column 策略（iqr/percentile/zscore/none）
+Phase 5: 语义输出          summary, score, insights, recommendations
 ```
 
-## Parameter Reference
+## 参数参考
 
-| Parameter | Type | Purpose |
-|-----------|------|---------|
-| `schema_rules` | dict | Column→type mapping (`"int"`, `"float"`, `"str"`, `"datetime"`) |
-| `semantic_rules` | dict | Tag `invalid` (→NaN) and `suspicious` (→flag, keep value) |
-| `missing_rules` | dict | Tag `sentinel` values (→NaN, separate from semantic) |
-| `business_rules` | dict | Legacy: `replace_values` + `fill` keyword |
-| `outlier_rules` | dict | Per-column: `{"col": {"method": "iqr"}}` |
-| `outlier_method` | str | Global: `iqr`/`percentile`/`zscore`/`none` |
-| `iqr_k` | float | IQR sensitivity (default 1.5) |
-| `ingestion_config` | dict | `db`, `expand_nested`, `expected_min_rows` |
-| `engine_kwargs` | dict | SQLite table selection |
+| 参数 | 类型 | 作用 |
+|------|------|------|
+| `schema_rules` | dict | 列→类型映射（`"int"`, `"float"`, `"str"`, `"datetime"`） |
+| `semantic_rules` | dict | 标记 `invalid`（→NaN）和 `suspicious`（→保留+标记） |
+| `missing_rules` | dict | 标记 `sentinel`（→NaN，与语义层分离） |
+| `business_rules` | dict | 旧版：`replace_values` + `fill` 关键字 |
+| `outlier_rules` | dict | per-column：`{"列名": {"method": "iqr"}}` |
+| `outlier_method` | str | 全局策略：`iqr`/`percentile`/`zscore`/`none` |
+| `iqr_k` | float | IQR 灵敏度（默认 1.5） |
+| `ingestion_config` | dict | `db`、`expand_nested`、`expected_min_rows` |
+| `engine_kwargs` | dict | SQLite 表名选择 |
 
-## Semantic Separation (Key Design)
+## 语义分层（核心设计）
 
-| Concept | Layer | Processing |
-|---------|-------|-----------|
-| **invalid** | semantic_rules | Value → NaN (clearly wrong) |
-| **suspicious** | semantic_rules | Value KEPT, flagged for review |
-| **sentinel** | missing_rules | Value → NaN (placeholder for missing) |
+| 概念 | 所在层 | 处理方式 |
+|------|--------|---------|
+| **invalid** | semantic_rules | 值→NaN（明显错误） |
+| **suspicious** | semantic_rules | 值**保留**，标记待人工审核 |
+| **sentinel** | missing_rules | 值→NaN（缺失占位符） |
 
-Sentinel is NOT semantic — it's a missing data marker. Different processing path.
+为什么 sentinel 必须独立？因为 sentinel 是"没有数据"，不是"数据错了"。处理路径不同。
 
-## AI-Native Output
+## AI 语义输出
 
-Every `execute()` returns `audit["semantic_output"]`:
+每次 `execute()` 都返回 `audit["semantic_output"]`：
 
 ```json
 {
-  "summary": "Cleaned 10000 rows → 9850 rows. Filled 423 missing...",
+  "summary": "清洗 10000 行 → 9850 行（98.5% 保留）。修复 423 处缺失值...",
   "data_quality_score": 89,
-  "insights": ["High missing rate in column X", "3% invalid age values"],
-  "actions_taken": ["Row 5, age: -5 → NaN (age.invalid)"],
-  "recommendations": ["Review suspicious values", "Check upstream data quality"]
+  "insights": ["X列缺失率偏高", "3% 的年龄值无效"],
+  "actions_taken": ["第5行, age: -5 → NaN (age.invalid)"],
+  "recommendations": ["审核可疑值", "检查上游数据采集流程"]
 }
 ```
 
-## Supported Formats
+| 字段 | 类型 | 作用 |
+|------|------|------|
+| `summary` | str | 一句话总结（AI 直接读） |
+| `data_quality_score` | int 0-100 | 数据健康分数 |
+| `insights` | list[str] | 关键发现 |
+| `actions_taken` | list[str] | 具体操作记录 |
+| `recommendations` | list[str] | 后续建议 |
 
-15 extensions / 11 formats: `.csv` `.tsv` `.xlsx` `.xls` `.json` `.parquet` `.feather` `.html` `.htm` `.xml` `.yaml` `.yml` `.db` `.sqlite` `.sqlite3` `.pkl` `.pickle`
+## 支持格式
 
-## Install
+15 种扩展名 / 11 种格式：`.csv` `.tsv` `.xlsx` `.xls` `.json` `.parquet` `.feather` `.html` `.htm` `.xml` `.yaml` `.yml` `.db` `.sqlite` `.sqlite3` `.pkl` `.pickle`
+
+## 安装
 
 ```bash
 # MiMo Code
@@ -89,15 +95,15 @@ git clone https://github.com/lytssaa/data-cleaning-skill.git ~/.config/mimocode/
 
 # Claude Desktop
 pip install mcp pandas pyarrow openpyxl
-# Then add to claude_desktop_config.json (see adapters/claude/README.md)
+# 然后配置 claude_desktop_config.json（详见 adapters/claude/README.md）
 ```
 
-## Dependencies
+## 依赖
 
 ```bash
 pip install pandas pyarrow openpyxl xlrd
 ```
 
-## License
+## 许可证
 
 MIT © 2026 lytssaa
