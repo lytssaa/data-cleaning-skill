@@ -128,7 +128,9 @@ class DataPipelineCleaner:
             5. Audit report assembly
 
         Args:
-            file_path: Path to a ``.csv``, ``.tsv``, ``.xlsx``, or ``.xls`` file.
+            file_path: Path to ``.csv``, ``.tsv``, ``.xlsx``, ``.xls``, ``.json``,
+                ``.parquet``, ``.feather``, ``.html``, ``.htm``, ``.xml``,
+                ``.yaml``, ``.yml``, ``.db``, ``.sqlite``, or ``.sqlite3``.
             schema_rules: Mapping of column name → target dtype.  Supported
                 values: ``'int'``, ``'float'``, ``'str'``, ``'datetime'``.
                 Columns not listed remain as strings.
@@ -265,6 +267,42 @@ class DataPipelineCleaner:
         if suffix == ".parquet":
             return pd.read_parquet(file_path).astype(str)
 
+        if suffix == ".feather":
+            return pd.read_feather(file_path).astype(str)
+
+        if suffix in {".html", ".htm"}:
+            tables = pd.read_html(file_path)
+            if not tables:
+                raise ValueError(f"No <table> found in HTML: {file_path}")
+            # If the page has exactly one table, use it.
+            # Otherwise combine all tables or let the user pick.
+            if len(tables) == 1:
+                return tables[0].astype(str)
+            # Merge multiple tables with a __table__ sentinel column
+            merged = pd.concat(tables, keys=range(len(tables)), names=["__table__", None])
+            return merged.reset_index(level=0).astype(str)
+
+        if suffix == ".xml":
+            return pd.read_xml(file_path, dtype=str).astype(str)
+
+        if suffix in {".yaml", ".yml"}:
+            try:
+                import yaml  # PyYAML
+            except ImportError:
+                raise ImportError(
+                    "PyYAML is required for .yaml files. Run: pip install pyyaml"
+                )
+            with open(file_path, "r", encoding="utf-8") as fh:
+                data = yaml.safe_load(fh)
+            if isinstance(data, list):
+                df = pd.DataFrame(data)
+            elif isinstance(data, dict):
+                # Flatten nested dict — use the top-level keys as rows
+                df = pd.DataFrame.from_dict(data, orient="index")
+            else:
+                raise ValueError(f"Unexpected YAML root type: {type(data).__name__}")
+            return df.astype(str)
+
         if suffix in {".db", ".sqlite", ".sqlite3"}:
             import sqlite3
             con = sqlite3.connect(str(file_path))
@@ -288,7 +326,8 @@ class DataPipelineCleaner:
 
         raise ValueError(
             f"Unsupported file format: '{suffix}'. "
-            f"Supported: .csv, .tsv, .xlsx, .xls, .json, .parquet, .db, .sqlite, .sqlite3"
+            f"Supported: .csv, .tsv, .xlsx, .xls, .json, .parquet, .feather, "
+            f".html, .htm, .xml, .yaml, .yml, .db, .sqlite, .sqlite3"
         )
 
     # ========================================================================
