@@ -132,42 +132,18 @@ pip install pandas pyarrow openpyxl xlrd
 
 ## 管道架构
 
-```
-Raw File
-   │
-   ▼
-Phase 0 — 数据读取        CSV/Excel: dtype=str（零推断）
-                           Parquet/Feather: 保留原生类型
-   │
-   ▼
-Phase 1 — 标准化          列名 → snake_case（NFKC 全角转半角）
-                           幽灵字符（\u200b \ufeff）剔除
-   │
-   ▼
-Phase 2 — 类型对齐        schema_rules: str → int/float/datetime
-                           errors='coerce': 不合法值 → NaN
-   │
-   ▼
-Phase 2.3 — 语义标记       semantic_rules: 标记 invalid/suspicious（不改数据）
-   │
-   ▼
-Phase 2.4 — 决策引擎       invalid → NaN，suspicious → 保留+标记
-Phase 2.5 — 缺失规则       missing_rules: sentinel → NaN（与语义层分离）
-   │
-   ▼
-Phase 3 — 缺失值处理       列 >70% 空 → 删列，行 >50% 空 → 删行
-                           数值列填 median，文本列填 Unknown
-   │
-   ▼
-Phase 4 — 异常值压制       per-column 策略：iqr / percentile / zscore / none
-                           只截断到围栏边界，不删行
-   │
-   ▼
-Phase 5 — 语义输出         summary + score + insights + recommendations
-   │
-   ▼
-(cleaned_df, audit_report)
-```
+<p align="center">
+  <img src="assets/pipeline.svg" alt="数据清洗管道架构" width="680">
+</p>
+
+| Phase | 阶段 | 核心操作 |
+|-------|------|---------|
+| 0 | 数据读取 | CSV/Excel → `dtype=str`（零推断）· Parquet/Feather 保留原生类型 |
+| 1 | 标准化 | 列名 → snake_case（NFKC）· 幽灵字符（`\u200b` `\ufeff`）剔除 |
+| 2 | 类型对齐 | `schema_rules`: str → int/float/datetime · `errors='coerce'` → NaN |
+| 3 | 语义 & 缺失处理 | `invalid` → NaN · `suspicious` → 保留+标记 · `sentinel` → NaN · median/mode 填补 |
+| 4 | 异常值压制 | per-column: iqr / percentile / zscore / none · 只截断不删行 |
+| 5 | AI 语义输出 | summary · data_quality_score · insights · recommendations |
 
 ---
 
