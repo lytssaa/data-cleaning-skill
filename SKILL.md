@@ -25,7 +25,7 @@ Use this skill whenever the user provides a tabular file and asks to:
 - Normalize text (whitespace, casing, full-width, ghost characters)
 - Produce a data quality audit report
 
-Supported input formats: `.csv`, `.tsv`, `.xlsx`, `.xls`, `.json`, `.parquet`, `.feather`, `.html`, `.htm`, `.xml`, `.yaml`, `.yml`, `.db`, `.sqlite`, `.sqlite3`.
+Supported input formats: `.csv`, `.tsv`, `.xlsx`, `.xls`, `.json`, `.parquet`, `.feather`, `.html`, `.htm`, `.xml`, `.yaml`, `.yml`, `.db`, `.sqlite`, `.sqlite3`, `.pkl`, `.pickle`.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Raw File
 │ Phase 0 — _safe_ingest(file_path)               │
 │   All columns read as dtype=str.  Zero type      │
 │   inference.  Protects IDs, codes, long numbers. │
-│   Supports 13 formats inc. Parquet, SQLite, YAML.│
+│   Supports 15 extensions / 11 formats inc. Parquet, SQLite, YAML, Pickle.│
 └──────────────────────┬───────────────────────────┘
                        ▼
 ┌──────────────────────────────────────────────────┐
