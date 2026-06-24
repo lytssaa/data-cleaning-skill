@@ -360,6 +360,7 @@ class DataPipelineCleaner:
         ".csv", ".tsv", ".xlsx", ".xls", ".json",
         ".parquet", ".feather", ".html", ".htm", ".xml",
         ".yaml", ".yml", ".db", ".sqlite", ".sqlite3",
+        ".pkl", ".pickle",
     )
 
     def run_on_directory(
@@ -703,10 +704,19 @@ class DataPipelineCleaner:
         suffix = file_path.suffix.lower()
 
         if suffix == ".json":
-            df = pd.read_json(file_path, dtype=str)
-            # Normalise nested json arrays if present — keep it flat
-            if df.shape[1] == 1 and isinstance(df.iloc[0, 0], dict):
-                df = pd.json_normalize(df.iloc[:, 0])
+            with open(file_path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            if isinstance(raw, list):
+                df = pd.DataFrame(raw)
+            elif isinstance(raw, dict):
+                list_keys = [k for k, v in raw.items() if isinstance(v, list)]
+                if list_keys:
+                    best_key = max(list_keys, key=lambda k: len(raw[k]))
+                    df = pd.DataFrame(raw[best_key])
+                else:
+                    df = pd.json_normalize(raw)
+            else:
+                df = pd.DataFrame([raw])
             return df.astype(str)
 
         if suffix in {".csv", ".tsv"}:
@@ -731,14 +741,15 @@ class DataPipelineCleaner:
             )
 
         if suffix in {".xlsx", ".xls"}:
+            engine = "xlrd" if suffix == ".xls" else "openpyxl"
             sheet = (engine_kwargs or {}).get("sheet")
             if sheet is not None:
                 return pd.read_excel(
                     file_path, sheet_name=sheet, dtype=str, na_filter=False,
-                    engine="openpyxl",
+                    engine=engine,
                 )
             # Read all sheets to detect multi-sheet workbooks
-            xls = pd.ExcelFile(file_path, engine="openpyxl")
+            xls = pd.ExcelFile(file_path, engine=engine)
             sheet_names = xls.sheet_names
             if len(sheet_names) == 1:
                 return pd.read_excel(xls, dtype=str, na_filter=False)
@@ -836,40 +847,52 @@ class DataPipelineCleaner:
 
         if suffix in {".db", ".sqlite", ".sqlite3"}:
             import sqlite3
-            con = sqlite3.connect(str(file_path))
-            tables = pd.read_sql_query(
-                "SELECT name FROM sqlite_master WHERE type='table' "
-                "AND name NOT LIKE 'sqlite_%'",
-                con,
-            )
-            table_names = tables["name"].tolist()
-            if not table_names:
-                raise ValueError(f"No user tables found in SQLite: {file_path}")
-            target_table = (engine_kwargs or {}).get("table")
-            if target_table:
-                if target_table not in table_names:
-                    raise ValueError(
-                        f"Table '{target_table}' not found in {file_path}. "
-                        f"Available: {table_names}"
+            with sqlite3.connect(str(file_path)) as con:
+                tables = pd.read_sql_query(
+                    "SELECT name FROM sqlite_master WHERE type='table' "
+                    "AND name NOT LIKE 'sqlite_%'",
+                    con,
+                )
+                table_names = tables["name"].tolist()
+                if not table_names:
+                    raise ValueError(f"No user tables found in SQLite: {file_path}")
+                target_table = (engine_kwargs or {}).get("table")
+                if target_table:
+                    if target_table not in table_names:
+                        raise ValueError(
+                            f"Table '{target_table}' not found in {file_path}. "
+                            f"Available: {table_names}"
+                        )
+                    df = pd.read_sql_query(
+                        f'SELECT * FROM "{target_table}"', con, dtype=str
                     )
-                df = pd.read_sql_query(
-                    f'SELECT * FROM "{target_table}"', con, dtype=str
+                    return df
+                if len(table_names) == 1:
+                    df = pd.read_sql_query(
+                        f'SELECT * FROM "{table_names[0]}"', con, dtype=str
+                    )
+                    return df
+                raise ValueError(
+                    f"Multiple tables found in {file_path}: {table_names}. "
+                    f"Use engine_kwargs={{'table': '<name>'}} to pick one."
                 )
-                con.close()
-                return df
-            if len(table_names) == 1:
-                df = pd.read_sql_query(
-                    f'SELECT * FROM "{table_names[0]}"', con, dtype=str
-                )
-                con.close()
-                return df
-            raise ValueError(
-                f"Multiple tables found in {file_path}: {table_names}. "
-                f"Use engine_kwargs={{'table': '<name>'}} to pick one."
-            )
 
         if suffix in {".pkl", ".pickle"}:
-            return pd.read_pickle(file_path).astype(str)
+            data = pd.read_pickle(file_path)
+            if isinstance(data, dict):
+                list_keys = [k for k, v in data.items() if isinstance(v, list)]
+                if list_keys:
+                    best_key = max(list_keys, key=lambda k: len(data[k]))
+                    df = pd.DataFrame(data[best_key])
+                else:
+                    df = pd.DataFrame.from_dict(data, orient="index")
+            elif isinstance(data, pd.DataFrame):
+                df = data
+            elif isinstance(data, list):
+                df = pd.DataFrame(data)
+            else:
+                df = pd.DataFrame([data])
+            return df.astype(str)
 
         raise ValueError(
             f"Unsupported file format: '{suffix}'. "
@@ -919,6 +942,7 @@ class DataPipelineCleaner:
             # Replace separators with underscore, collapse
             name = _SNAKE_CASE_SEP_RE.sub("_", name)
             name = _NON_ALNUM_RE.sub("", name)
+            name = re.sub(r"_+", "_", name)
             name = name.strip("_") or f"col_{len(new_names)}"
             # Deduplicate
             if name in seen:
@@ -947,7 +971,7 @@ class DataPipelineCleaner:
                 )
                 .str.replace(_GHOST_RE, "", regex=True)
                 .str.strip()
-                .str.replace(r" {3,}", " ", regex=True)
+                .str.replace(r" {2,}", " ", regex=True)
             )
             # After normalisation: a cell that is now empty/whitespace-only is
             # semantically missing — promote to NaN so the missing-value phase
