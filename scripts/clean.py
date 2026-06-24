@@ -74,6 +74,21 @@ _SNAKE_CASE_SEP_RE = re.compile(r"[\s\-]+")
 _NON_ALNUM_RE = re.compile(r"[^\w()（）\[\]【】.%]+")
 
 
+def _standardize_col_name(name: str, lowercase: bool = True) -> str:
+    """Apply the same column-name normalisation as Phase 1, without a DataFrame.
+
+    Used in ``execute()`` to pre-compute the ``original → standardised``
+    mapping before Phase 1 runs, so ``schema_rules`` can be translated.
+    """
+    name = str(name).strip()
+    name = unicodedata.normalize("NFKC", name)
+    if lowercase:
+        name = name.lower()
+    name = _SNAKE_CASE_SEP_RE.sub("_", name)
+    name = _NON_ALNUM_RE.sub("", name)
+    return name.strip("_") or "col"
+
+
 # ============================================================================
 # DataPipelineCleaner
 # ============================================================================
@@ -189,6 +204,46 @@ class DataPipelineCleaner:
                 f"Row count ({len(df)}) below expected minimum "
                 f"({expected_min_rows}) for {fp.name}. Data may be truncated."
             )
+        # ── Pre-compute column name mapping for schema_rules ───────────────
+        # Phase 1 will rename columns.  We translate schema_rules keys now
+        # so Phase 2 receives column names that actually exist.
+        original_cols = list(df.columns)
+        predicted_names = [
+            _standardize_col_name(c, lowercase=lowercase_columns)
+            for c in original_cols
+        ]
+        name_map: dict[str, str] = dict(zip(original_cols, predicted_names))
+        # Handle deduplication collisions (same logic as Phase 1)
+        seen: dict[str, int] = {}
+        deduped: list[str] = []
+        for name in predicted_names:
+            if name in seen:
+                seen[name] += 1
+                name = f"{name}_{seen[name]}"
+            else:
+                seen[name] = 0
+            deduped.append(name)
+        name_map = dict(zip(original_cols, deduped))
+        # Translate schema_rules to use standardised column names
+        translated_rules: dict[str, str] = {}
+        for col_key, target in schema_rules.items():
+            matched = name_map.get(col_key)
+            if matched is not None:
+                translated_rules[matched] = target
+            elif col_key in deduped:
+                translated_rules[col_key] = target
+            else:
+                # Try case-insensitive match as fallback
+                for orig, pred in name_map.items():
+                    if orig.lower() == col_key.lower():
+                        translated_rules[pred] = target
+                        break
+                else:
+                    self._audit["warnings"].append(
+                        f"schema_rules key '{col_key}' not found in "
+                        f"columns {list(name_map.keys())[:10]}..."
+                    )
+        self._audit["column_name_mapping"] = name_map
         # Record input/output format metadata
         self._audit["input"] = {
             "file": str(fp.name),
@@ -204,9 +259,10 @@ class DataPipelineCleaner:
         df = self._standardize_columns_and_text(df, lowercase=lowercase_columns)
         self._audit["stage_timings"]["standardize"] = _elapsed(t0)
 
-        # Phase 2: Type alignment
-        df = self._type_alignment(df, schema_rules)
+        # Phase 2: Type alignment (uses translated_rules for post-standardization col names)
+        df = self._type_alignment(df, translated_rules)
         self._audit["stage_timings"]["type_alignment"] = _elapsed(t0)
+        self._audit["per_column"]["schema_rules_applied"] = translated_rules
 
         # Phase 3: Missing-value trial
         df = self._missing_value_trial(df, business_rules=business_rules)
@@ -226,6 +282,33 @@ class DataPipelineCleaner:
             self._audit["nested_tables"] = {
                 col: len(child) for col, child in nested_dfs.items()
             }
+
+        # Phase 4.6: Process extra Excel sheets (if multi-sheet & no explicit sheet)
+        sheet_dfs: dict[str, pd.DataFrame] = {}
+        raw_sheets: dict[str, pd.DataFrame] | None = self._audit.pop("_raw_sheets", None)
+        sheet_order: list[str] = self._audit.pop("_raw_sheets_order", [])
+        if raw_sheets:
+            for sname, raw_df in raw_sheets.items():
+                try:
+                    s_df = self._standardize_columns_and_text(
+                        raw_df, lowercase=lowercase_columns
+                    )
+                    s_df = self._type_alignment(s_df, translated_rules)
+                    s_df = self._missing_value_trial(
+                        s_df, business_rules=business_rules
+                    )
+                    s_df = self._outlier_suppression(
+                        s_df, iqr_k=iqr_k, method=outlier_method,
+                        threshold=outlier_threshold,
+                        zscore_threshold=zscore_threshold,
+                    )
+                    sheet_dfs[sname] = s_df
+                except Exception as exc:
+                    self._audit["warnings"].append(
+                        f"Multi-sheet processing failed for '{sname}': {exc}"
+                    )
+            self._audit["sheets_processed"] = sheet_order
+            self._audit["_sheet_dfs"] = sheet_dfs
 
         # Phase 5: Final audit assembly
         self._audit["cleaned_rows"] = len(df)
@@ -307,11 +390,20 @@ class DataPipelineCleaner:
             sheet_names = xls.sheet_names
             if len(sheet_names) == 1:
                 return pd.read_excel(xls, dtype=str, na_filter=False)
-            # Multiple sheets: process first, warn about others
+            # Multiple sheets: process ALL by default (like SQLite multi-table).
+            # Store extra sheets so execute() can run the full pipeline on each.
+            extra_sheets: dict[str, pd.DataFrame] = {}
+            for sname in sheet_names[1:]:
+                extra_sheets[sname] = pd.read_excel(
+                    xls, sheet_name=sname, dtype=str, na_filter=False
+                )
+            self._audit["_raw_sheets"] = extra_sheets
+            self._audit["_raw_sheets_order"] = sheet_names
             self._audit["warnings"].append(
                 f"Excel workbook has {len(sheet_names)} sheets: {sheet_names}. "
-                f"Processing sheet 0 ('{sheet_names[0]}') only. "
-                f"Use engine_kwargs={{'sheet': '<name>'}} to select a specific sheet."
+                f"Processing all sheets. Returning sheet 0 ('{sheet_names[0]}') "
+                f"as main DataFrame; remaining {len(sheet_names)-1} sheet(s) in "
+                f"audit['_sheets']."
             )
             return pd.read_excel(xls, sheet_name=sheet_names[0], dtype=str, na_filter=False)
 
@@ -424,10 +516,13 @@ class DataPipelineCleaner:
                 f"Use engine_kwargs={{'table': '<name>'}} to pick one."
             )
 
+        if suffix in {".pkl", ".pickle"}:
+            return pd.read_pickle(file_path).astype(str)
+
         raise ValueError(
             f"Unsupported file format: '{suffix}'. "
             f"Supported: .csv, .tsv, .xlsx, .xls, .json, .parquet, .feather, "
-            f".html, .htm, .xml, .yaml, .yml, .db, .sqlite, .sqlite3"
+            f".html, .htm, .xml, .yaml, .yml, .db, .sqlite, .sqlite3, .pkl, .pickle"
         )
 
     # ========================================================================
@@ -546,12 +641,18 @@ class DataPipelineCleaner:
 
             before_nan = int(df[col].isna().sum())
             try:
-                if target == "int":
-                    numeric = pd.to_numeric(df[col], errors="coerce")
-                    # Use pandas nullable Int64 to distinguish NaN from 0
-                    df[col] = numeric.astype("Int64")
-                elif target == "float":
-                    df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+                if target in ("int", "float"):
+                    # Strip currency symbols (¥ $ € £) and thousand separators
+                    # before numeric coercion so "¥3,839.59" → "3839.59".
+                    raw_col = df[col].astype(str).str.replace(
+                        r'[¥￥$€£,]', '', regex=True
+                    )
+                    numeric = pd.to_numeric(raw_col, errors="coerce")
+                    if target == "int":
+                        # Round before casting to Int64 so "45.7" → 46
+                        df[col] = numeric.round().astype("Int64")
+                    else:
+                        df[col] = numeric.astype("float64")
                 elif target == "str":
                     df[col] = df[col].astype("string")
                 elif target == "datetime":
@@ -911,9 +1012,9 @@ class DataPipelineCleaner:
         if isinstance(expand_nested, list):
             targets = [c for c in expand_nested if c in df.columns]
         elif expand_nested is True:
-            # Auto-detect: any string column where >20% of values look like
-            # serialised lists
-            for col in df.select_dtypes(include=["object", "string"]).columns:
+            # Auto-detect: any column where >20% of values look like
+            # serialised lists or are already Python list/dict objects
+            for col in df.columns:
                 ser = df[col].dropna()
                 if len(ser) == 0:
                     continue
@@ -921,9 +1022,15 @@ class DataPipelineCleaner:
                 sample = ser.head(50)
                 list_like = 0
                 for val in sample:
+                    # Already-parsed Python list/dict objects
+                    if isinstance(val, (list, dict)):
+                        list_like += 1
+                        if list_like >= max(3, len(sample) * 0.2):
+                            targets.append(col)
+                            break
+                    # String-form JSON array or Python list literal
                     s = str(val).strip()
                     if s.startswith("[") and s.endswith("]"):
-                        # Quick check: starts like a JSON array or Python list
                         list_like += 1
                         if list_like >= max(3, len(sample) * 0.2):
                             targets.append(col)
