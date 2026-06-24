@@ -771,10 +771,10 @@ class DataPipelineCleaner:
             return pd.read_excel(xls, sheet_name=sheet_names[0], dtype=str, na_filter=False)
 
         if suffix == ".parquet":
-            return pd.read_parquet(file_path).astype(str)
+            return pd.read_parquet(file_path)
 
         if suffix == ".feather":
-            return pd.read_feather(file_path).astype(str)
+            return pd.read_feather(file_path)
 
         if suffix in {".html", ".htm"}:
             tables = pd.read_html(file_path)
@@ -1087,9 +1087,30 @@ class DataPipelineCleaner:
         total_rows = len(df)
         total_cols_before = df.shape[1]
 
-        # Convert empty/whitespace-only strings to NaN so they get imputed
-        for col in df.select_dtypes(include=["object", "string"]).columns:
-            df[col] = df[col].replace(r"^\s*$", pd.NA, regex=True)
+        # ── Ghost-string sentinel cleanup ─────────────────────────────────
+        # dtype=str ingestion turns blanks into literal "nan"/"NaN"/"None"/"null"
+        # which defeat .isna() downstream.  Replace ALL of them with real NaN.
+        _GHOST_NA_RE = re.compile(
+            r"^\s*(nan|none|null|n/a|na|n/a|-|\.+)\s*$", re.IGNORECASE
+        )
+        text_cols = df.select_dtypes(include=["object", "string"]).columns
+        ghost_fixed = 0
+        for col in text_cols:
+            # Also catch truly empty / whitespace-only strings
+            empty_mask = df[col].astype(str).str.strip().eq("") | df[col].isna()
+            ghost_mask = df[col].astype(str).apply(
+                lambda x: bool(_GHOST_NA_RE.match(x)) if pd.notna(x) else False
+            )
+            combined = empty_mask | ghost_mask
+            if combined.any():
+                ghost_fixed += int(combined.sum())
+                df.loc[combined, col] = pd.NA
+        if ghost_fixed:
+            self._audit["per_column"]["ghost_na_cleaned"] = {"count": ghost_fixed}
+            self._audit["warnings"].append(
+                f"Ghost-string sentinels (nan/None/null/N/A/-) cleaned: "
+                f"{ghost_fixed} cell(s) replaced with real NaN."
+            )
 
         # ── Step 1: Drop fatally-missing columns (>70%) ────────────────────
         col_missing_pct = df.isna().mean()

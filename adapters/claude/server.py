@@ -22,7 +22,6 @@ import json
 import sys
 from pathlib import Path
 
-# Make scripts/ importable regardless of cwd
 _SKILL_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_SKILL_ROOT))
 
@@ -32,41 +31,72 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("Data Cleaner — Industrial-Grade Pipeline")
 
-# ── Tool: clean ────────────────────────────────────────────────────────────
+
+def _safe_parse_json(label: str, raw: str, default: dict | None = None) -> dict | None:
+    raw = raw.strip()
+    if not raw or raw == "{}":
+        return default
+    try:
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict):
+            return None
+        return parsed
+    except json.JSONDecodeError:
+        return None
 
 
 @mcp.tool()
-def clean_data(file_path: str, schema_rules: str) -> str:
-    """Run the five-phase cleaning pipeline on a CSV/Excel file.
+def clean_data(
+    file_path: str,
+    schema_rules: str = "{}",
+    business_rules: str = "{}",
+    outlier_method: str = "none",
+    iqr_k: float = 1.5,
+    expand_nested: bool = False,
+) -> str:
+    """Run the five-phase cleaning pipeline with full parameter control.
 
-    Phases: safe ingest → standardise → type alignment → missing trial → outlier suppression.
+    Phases: safe ingest -> standardise -> type alignment -> missing trial -> outlier suppression.
 
     Args:
-        file_path: Absolute or relative path to the data file (.csv, .tsv, .xlsx, .xls).
-        schema_rules: JSON string mapping column names to target types.
-            Example: '{"age": "int", "salary": "float", "join_date": "datetime"}'
+        file_path: Path to the data file (.csv, .tsv, .xlsx, .xls, .json, .parquet, .feather, .html, .xml, .yaml, .db, .pkl).
+        schema_rules: JSON string. Column -> target type mapping.
+            Example: '{"age": "int", "salary": "float"}'
             Supported types: int, float, str, datetime.
+        business_rules: JSON string. Per-column semantic rules.
+            Example: '{"height_cm": {"replace_values": [0], "fill": "median", "missing_means": "invalid data"}}'
+            Keys: replace_values (list), fill (value or "median"/"mean"/"mode"), missing_means (str).
+        outlier_method: 'iqr', 'percentile', 'zscore', or 'none' (default).
+        iqr_k: IQR sensitivity coefficient (default 1.5).
+        expand_nested: If true, auto-detect and expand nested JSON/list columns.
 
     Returns:
-        JSON string — the full audit report including original/cleaned row counts,
-        retention rate, dropped columns, imputed values, and suppressed outliers.
+        JSON string — full audit report.
     """
-    try:
-        parsed_rules = json.loads(schema_rules)
-        if not isinstance(parsed_rules, dict):
-            return json.dumps(
-                {"error": "schema_rules must be a JSON object"},
-                ensure_ascii=False,
-            )
-    except json.JSONDecodeError as e:
+    parsed_schema = _safe_parse_json("schema_rules", schema_rules, {})
+    if parsed_schema is None:
+        return json.dumps({"error": "schema_rules must be a JSON object"}, ensure_ascii=False)
+
+    parsed_business = _safe_parse_json("business_rules", business_rules, {})
+    if parsed_business is None:
+        return json.dumps({"error": "business_rules must be a JSON object"}, ensure_ascii=False)
+
+    if outlier_method not in ("iqr", "percentile", "zscore", "none"):
         return json.dumps(
-            {"error": f"Invalid JSON in schema_rules: {e}"},
+            {"error": f"Invalid outlier_method '{outlier_method}'. Use: iqr, percentile, zscore, none"},
             ensure_ascii=False,
         )
 
     cleaner = DataPipelineCleaner()
     try:
-        _, audit = cleaner.execute(file_path=file_path, schema_rules=parsed_rules)
+        _, audit = cleaner.execute(
+            file_path=file_path,
+            schema_rules=parsed_schema,
+            business_rules=parsed_business if parsed_business else None,
+            outlier_method=outlier_method,
+            iqr_k=iqr_k,
+            expand_nested=expand_nested,
+        )
     except FileNotFoundError as e:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
     except ValueError as e:
@@ -77,22 +107,15 @@ def clean_data(file_path: str, schema_rules: str) -> str:
             ensure_ascii=False,
         )
 
-    # Strip internal helper dicts that aren't JSON-serialisable
     return json.dumps(audit, ensure_ascii=False, indent=2, default=str)
-
-
-# ── Tool: profile ──────────────────────────────────────────────────────────
 
 
 @mcp.tool()
 def profile_data(file_path: str) -> str:
     """Quick-look data profile: shape, dtypes, null counts, sample values.
 
-    Reads the file with strings only (no type inference), then summarises
-    each column's unique count, null count, and top sample values.
-
     Args:
-        file_path: Path to a CSV/Excel/JSON file.
+        file_path: Path to a data file.
 
     Returns:
         JSON string with column-level statistics.
@@ -111,16 +134,18 @@ def profile_data(file_path: str) -> str:
             df = pd.read_csv(p, dtype=str, na_filter=False, keep_default_na=False)
         elif suff in {".xlsx", ".xls"}:
             df = pd.read_excel(p, dtype=str, na_filter=False)
+        elif suff == ".parquet":
+            df = pd.read_parquet(p)
+        elif suff == ".feather":
+            df = pd.read_feather(p)
         else:
-            return json.dumps(
-                {"error": f"Unsupported format: {suff}"}, ensure_ascii=False
-            )
+            return json.dumps({"error": f"Unsupported format for profile: {suff}"}, ensure_ascii=False)
 
         total_rows = len(df)
         profile: dict = {"file": str(p.name), "rows": total_rows, "columns": {}}
         for col in df.columns:
             ser = df[col]
-            null_count = int((ser.isna() | (ser.astype(str).str.strip() == "")).sum())
+            null_count = int(ser.isna().sum())
             profile["columns"][str(col)] = {
                 "dtype": str(ser.dtype),
                 "null_count": null_count,
@@ -137,8 +162,6 @@ def profile_data(file_path: str) -> str:
             ensure_ascii=False,
         )
 
-
-# ── Entry ───────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     mcp.run()
