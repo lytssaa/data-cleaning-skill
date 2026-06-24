@@ -157,6 +157,7 @@ class DataPipelineCleaner:
         expected_min_rows: int | None = None,
         semantic_rules: dict[str, dict[str, Any]] | None = None,
         outlier_rules: dict[str, dict[str, Any]] | None = None,
+        missing_rules: dict[str, dict[str, Any]] | None = None,
     ) -> tuple[pd.DataFrame, dict[str, Any]]:
         """Run the full seven-phase pipeline and return cleaned data + audit.
 
@@ -166,8 +167,9 @@ class DataPipelineCleaner:
             0. Safe ingest (all-string, zero type inference)
             1. Column-name / text-value standardisation (snake_case, NFKC, ghost-char removal)
             2. Type coercion per *schema_rules* with ``errors='coerce'``
-            2.3. Semantic tagging (tag cells as invalid/suspicious/sentinel — no data modification)
-            2.4. Decision engine (apply semantic decisions + legacy replace_values)
+            2.3. Semantic tagging (tag cells as invalid/suspicious — no data modification)
+            2.4. Decision engine (apply invalid → NaN, suspicious → flag, legacy replace_values)
+            2.5. Missing rules (sentinel → NaN — separate from semantic layer)
             3. Missing-value trial (column/row pruning + imputation)
             4. Outlier suppression (multi-strategy, never deletion)
             5. Audit report assembly
@@ -223,7 +225,7 @@ class DataPipelineCleaner:
             "per_column": {},
             "stage_timings": {},
             "warnings": [],
-            "semantic_audit": {"total_cells_tagged": 0, "by_type": {"invalid": 0, "suspicious": 0, "sentinel": 0}},
+            "semantic_audit": {"total_cells_tagged": 0, "by_type": {"invalid": 0, "suspicious": 0}},
             "cell_actions": [],
             "outlier_rules_applied": {},
         }
@@ -298,6 +300,34 @@ class DataPipelineCleaner:
             df, cell_actions = self._decision_engine(df, semantic_rules, business_rules)
             self._audit["stage_timings"]["decision_engine"] = _elapsed(t0)
         self._audit["cell_actions"] = cell_actions
+
+        # Phase 2.5: Missing rules — sentinel → NaN (separate from semantic layer)
+        # Sentinel values are "missing placeholders", not semantic errors.
+        # They must be converted BEFORE missing_value_trial fills them.
+        sentinel_audit: dict[str, Any] = {}
+        if missing_rules:
+            sentinel_count = 0
+            sentinel_log: dict[str, dict[str, Any]] = {}
+            for col, rule in missing_rules.items():
+                vals = rule.get("sentinel") or rule.get("values") or []
+                if not vals or col not in df.columns:
+                    continue
+                try:
+                    numeric_col = pd.to_numeric(df[col], errors="coerce")
+                    mask = numeric_col.isin(vals)
+                except Exception:
+                    continue
+                replaced = int(mask.sum())
+                if replaced > 0:
+                    df.loc[mask, col] = pd.NA
+                    sentinel_count += replaced
+                    sentinel_log[col] = {"sentinel_values": vals, "count": replaced}
+            sentinel_audit = {"total_sentinels_converted": sentinel_count, "by_column": sentinel_log}
+            self._audit["missing_rules_audit"] = sentinel_audit
+            if sentinel_count:
+                self._audit["warnings"].append(
+                    f"missing_rules: {sentinel_count} sentinel value(s) converted to NaN."
+                )
 
         # Phase 3: Missing-value trial
         df = self._missing_value_trial(df, business_rules=business_rules)
@@ -1095,30 +1125,31 @@ class DataPipelineCleaner:
         df: pd.DataFrame,
         semantic_rules: dict[str, dict[str, Any]],
     ) -> dict[str, Any]:
-        """Tag cells as invalid/suspicious/sentinel without modifying data.
+        """Tag cells as invalid/suspicious without modifying data.
 
         For each column with semantic_rules, creates a ``{col}_tags`` column
         with per-cell tags.  Does NOT modify the original data values.
+        Sentinel handling is now in missing_rules (Phase 2.5).
 
         Args:
             df: DataFrame after type alignment (Phase 2).
-            semantic_rules: ``{col: {"invalid": [...], "suspicious": [...], "sentinel": [...]}}``.
+            semantic_rules: ``{col: {"invalid": [...], "suspicious": [...]}}``.
 
         Returns:
-            Tag audit: ``{"col": {"invalid": N, "suspicious": N, "sentinel": N}}``.
+            Tag audit: ``{"col": {"invalid": N, "suspicious": N}}``.
         """
         tag_audit: dict[str, dict[str, int]] = {}
         total_tagged = 0
-        by_type = {"invalid": 0, "suspicious": 0, "sentinel": 0}
+        by_type = {"invalid": 0, "suspicious": 0}
 
         for col, rules in semantic_rules.items():
             if col not in df.columns:
                 continue
 
-            col_audit = {"invalid": 0, "suspicious": 0, "sentinel": 0}
+            col_audit = {"invalid": 0, "suspicious": 0}
             tags = pd.Series(None, index=df.index, dtype="string")
 
-            for tag_type in ("invalid", "suspicious", "sentinel"):
+            for tag_type in ("invalid", "suspicious"):
                 values = rules.get(tag_type, [])
                 if not values:
                     continue
@@ -1154,9 +1185,9 @@ class DataPipelineCleaner:
 
         For each column with semantic_rules:
           - 'invalid' cells → convert to NaN
-          - 'sentinel' cells → convert to NaN
           - 'suspicious' cells → KEEP the value, but flag in audit
 
+        Sentinel handling is now in missing_rules (Phase 2.5).
         Then handles legacy ``replace_values`` from business_rules (backward compat).
         Drops tag columns after processing.
 
@@ -1173,7 +1204,7 @@ class DataPipelineCleaner:
                 if col not in df.columns:
                     continue
 
-                for tag_type in ("invalid", "sentinel"):
+                for tag_type in ("invalid",):
                     values = rules.get(tag_type, [])
                     if not values:
                         continue
