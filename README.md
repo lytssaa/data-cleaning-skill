@@ -101,7 +101,7 @@
 flowchart TB
     subgraph title[" "]
         direction LR
-        T["📄 原始文件<br/>CSV · Excel · JSON · Parquet · SQLite"]
+        T["📄 原始文件<br/>CSV · TSV · Excel · JSON · Parquet · Feather · HTML · XML · YAML · SQLite"]
     end
 
     subgraph row1["前三个阶段"]
@@ -324,7 +324,7 @@ data-cleaning-skill/
 ├── README.md              ← 你正在看的文件
 ├── SKILL.md               ← Skill 入口定义
 ├── scripts/
-│   ├── clean.py           ← ★ 核心管道类（686 行）
+│   ├── clean.py           ← ★ 核心管道类（~750 行，9种文件格式）
 │   ├── profile.py         ← 数据画像工具
 │   └── quality_report.py  ← 审计报告渲染
 ├── adapters/claude/       ← Claude Desktop MCP
